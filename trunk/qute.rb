@@ -752,7 +752,7 @@ class FormParser < SGMLParser
     finish_option
 
     # set value to first choice if no options were marked as 'selected'
-    @lastfield.value = @lastfield.choices.keys[0] unless @lastfield.value
+    @lastfield.value ||= @lastfield.choices.keys[0] if @lastfield
     @lastfield = nil
   end
 
