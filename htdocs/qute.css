@@ -8,6 +8,10 @@ body {
   display: block;
 }
 
+.logo img {
+  border: none;
+}
+
 .content {
   margin-left: 124px;
   padding-left: 0.5em;
@@ -23,12 +27,16 @@ body {
 .menu a {
   display: block;
   color: #b40;
-  font-family: Book Antiqua, Times, serif;
+  font-family: Book Antiqua, serif;
   font-size: 13pt;
 }
 
 .menu a:hover {
   background: #ff8;
+}
+
+a.logo:hover {
+  background: none;
 }
 
 .menu a:visited {
@@ -63,7 +71,7 @@ a:visited {
 }
 
 .qute, h1, h2, h3, h4, h5, h6 {
-  font-family: Book Antiqua, Times, serif;
+  font-family: Book Antiqua, serif;
 }
 
 h2 + p { margin-top: 0; }
