@@ -29,7 +29,7 @@ class BugColumnSet < QuteCmd::NonAmbiguousHash
     'Assignee'          => 20,
     'Status'            =>  4,
     'Resolution'        =>  4,
-    'Summary'           => 45,
+    'Summary'           =>  0,
   }
 
   def initialize()
@@ -64,9 +64,32 @@ class BugList
   end
 end
 
+class DoubleParser
+  include Qute::DataObjGen
+
+  attr_reader :tableparser, :formparser
+
+  def initialize
+    @tableparser = Qute::TableParser.new
+    @formparser = Qute::FormParser.new
+  end
+
+  def <<(addbuf)
+    @tableparser << addbuf
+    @formparser << addbuf
+  end
+end
+
+class BugText
+  def initialize( queryform )
+    @bugtext = queryform.post( DoubleParser )
+  end
+
+  # XXX this definitely isn't complete
+end
+
 class BugzCommands
   def directory( cmdobj )
-    #cmdobj.need_queryform = true
     cmdobj.syngrid = BugGrid.new( cmdobj )
 
     cmdobj.parseargs!
@@ -83,6 +106,13 @@ class BugzCommands
         cmdobj.syngrid.showrecord( bug )
       end
     end
+  end
+
+  def read( cmdobj )
+    # XXX need a new grid probably
+    cmdobj.parseargs!
+    bugtext = BugText.new( cmdobj.queryform )
+    # XXX need to finish BugText then can do something with it here
   end
 
   def version( cmdobj )
