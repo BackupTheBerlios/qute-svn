@@ -294,6 +294,10 @@ class FormField
   # element or set of radio buttons.
   attr_reader   :choices
 
+  # true if more than one choice can be used for this field at the
+  # same time
+  attr_accessor :multiple
+
   # informal descriptive name of this field
   attr_writer   :title
 
@@ -304,6 +308,7 @@ class FormField
     @password = false
     @prompt = nil
     @choices = OrderedHash.new
+    @multiple = false
     @title = nil
   end
 
@@ -313,6 +318,12 @@ class FormField
     @title or @name
   end
 
+  # XXX: Apparently this is breaking things badly.  I'm now submitting
+  # forms with values set to options *strings* instead of to the valid
+  # *values* that they ought to be.   Ok, this may be fixed now with
+  # the new formula for assigning newval.  But now we have another
+  # problem -- why are we switching from "buglist.cgi" to "query.cgi"?
+
   # Set the current value of the object.  If this FormField has
   # #choices (such as if it's a <select> element or a set of radio
   # buttons), then the value is actually set to one of the valid
@@ -321,7 +332,9 @@ class FormField
     if @choices.length > 0 and newval != '' then
       choicelist = ( @choices + @choices.keys ).uniq
       choice = Qute.getnonambiguous(newval, choicelist)
-      newval = ( @choices[choice] or @choices.invert[choice] )
+      setval = newval
+      newval = ( @choices.invert[choice] or choice )
+      p [ setval, choice, @choices[choice], @choices.invert[choice], newval ]
     end
     #puts "setting (#{@name}) to (#{newval})"
     @value = newval
@@ -329,11 +342,12 @@ class FormField
 end
 
 class Form < OrderedHash
-  attr_accessor :sourceurl, :targeturl, :cookie
+  attr_accessor :sourceurl, :targeturl, :cookie, :method
   @@http = nil
 
   def initialize(targeturl = nil, prevobj = nil)
     super()
+    @method = 'get'
     if prevobj then
       @targeturl = prevobj.sourceurl.merge(targeturl)
       @sourceurl = prevobj.sourceurl
@@ -384,44 +398,57 @@ class Form < OrderedHash
   # post form data to CGI @action on server @host
   def post(parserclass = nil)
     @targeturl or raise "No target url -- cannot post"
+    resp, dest = nil, nil
 
-    # if a parserclass was passed in, create an instance and set it up as the
-    # http.post destination object
-    if parserclass then
-      dest = parserclass.new
+    loop do
 
-      # the new object's sourceurl is our own targeturl
-      # this is used for setting the next post's referer
-      dest.sourceurl = targeturl
-    end
+      # if a parserclass was passed in, create an instance and set it
+      # up as the http.post destination object
+      if parserclass then
+        dest = parserclass.new
 
-    # connect to web host unless we already have a matching http object
-    if not @@http or @@http.address != @targeturl.host then
-      @@http = Net::HTTP.new(@targeturl.host, @targeturl.port)
-    end
+        # the new object's sourceurl is our own targeturl
+        # this is used for setting the next post's referer
+        dest.sourceurl = targeturl
+      end
 
-    # send the data
-    headers = {
-      'Content-Type' => 'application/x-www-form-urlencoded',
-      'UserAgent' => 'qute',
-      'Referer' => @sourceurl ? @sourceurl.to_s : @targeturl.to_s
-    }
-    headers['Cookie'] = @cookie if @cookie
-    path = @targeturl.path + (@targeturl.query ? '?' + @targeturl.query : '')
-    #puts "Query:"
-    #p path
-    #p querystring
-    #p headers
-    if querystring == ''
-        resp = @@http.get(path, headers, dest)
-    else
-        resp = @@http.post(path, querystring, headers, dest)
-    end
+      # connect to web host unless we already have a matching http object
+      if not @@http or @@http.address != @targeturl.host then
+        @@http = Net::HTTP.new(@targeturl.host, @targeturl.port)
+      end
+      puts @targeturl
 
-    # 1.6.8 / 1.8.0 compatibility: 
-    # 1.6.8 returns [resp,data] where 1.8.0 returns only resp
-    if RUBY_VERSION < "1.8"
-        resp = resp[0]
+      # send the data
+      headers = {
+        'Content-Type' => 'application/x-www-form-urlencoded',
+        'UserAgent' => 'qute',
+        'Referer' => @sourceurl ? @sourceurl.to_s : @targeturl.to_s
+      }
+      headers['Cookie'] = @cookie if @cookie
+      path = @targeturl.path + (@targeturl.query ? '?' + @targeturl.query : '')
+      puts "Query:"
+      p path
+      p querystring
+      p headers
+      if @method == 'get' or querystring == ''
+          querystring == '' or path += '?' + querystring
+          resp = @@http.get(path, headers, dest)
+      else
+          resp = @@http.post(path, querystring, headers, dest)
+      end
+
+      # 1.6.8 / 1.8.0 compatibility: 
+      # 1.6.8 returns [resp,data] where 1.8.0 returns only resp
+      if RUBY_VERSION < "1.8"
+          resp = resp[0]
+      end
+
+      if resp.header['location']
+        @targeturl = @targeturl.merge( resp.header['location'] )
+      else
+        break
+      end
+
     end
 
     # return value depends on if a parserclass was passed in
@@ -744,6 +771,7 @@ class FormParser < SGMLParser
     # XXX: consider not including 'name' attribute in FormFields, since it is
     # always available as the field's key in the Form
     @lastfield.name = token['name']
+    @lastfield.multiple = ( token['multiple'] and token['multiple'] != 'no' )
     startcapture
   end
 
@@ -751,8 +779,11 @@ class FormParser < SGMLParser
     # process text for the previous choice, if there were any
     finish_option
 
-    # set value to first choice if no options were marked as 'selected'
-    @lastfield.value ||= @lastfield.choices.keys[0] if @lastfield
+    # set value to first choice if no options were marked as
+    # 'selected' and it is not a multiple-choice field
+    if @lastfield and not @lastfield.multiple
+      @lastfield.value ||= @lastfield.choices.keys[0]
+    end
     @lastfield = nil
   end
 
