@@ -697,7 +697,7 @@ class OptsSettings
         # Debug is even more global than the current command.
         $QUTEDEBUG = true
       else
-        # All these other settings are properly associated with a sepcific
+        # All these other settings are properly associated with a specific
         # run of a command, so don't store them is a totally global place.
         cmdobj.setting[opt] = arg
       end
@@ -718,10 +718,15 @@ class OptsFormFields
   end
 
   def validopts(cmdobj)
-    opts = @queryform.map { |field| [ field.name, ArgOptional ] }
+    opts = @queryform.map { |field| 
+      [ field.name, (field.choices.length > 0 ? ArgRequired : ArgOptional) ] 
+    }
 
     # Add aliases for several of the form fields
-    opts += self.fieldalias.keys.map { |name| [ name, ArgOptional ] }
+    self.fieldalias.each { |ali,name|
+      opts.push [ ali, 
+        @queryform[name].choices.length > 0 ? ArgRequired : ArgOptional ]
+    }
 
     # Return the list of options OptsFormFields knows how to handle.
     return opts
@@ -732,8 +737,40 @@ class OptsFormFields
       # Change opt to actual field name if it is an alias
       opt = self.fieldalias[opt] if self.fieldalias[opt]
 
-      # Apply the value to the form field
-      @queryform[opt].value = arg
+      # Adjust argument if choices are given for this field
+      if @queryform[opt].choices.length > 0 then
+        if @queryform[opt].multiple then
+          # Ruby doesn't support look-behind so this is the best we can
+          # do at the moment
+          args = arg.gsub(/([^\\]|^)\+/, '\1'+"\n")
+          args.gsub!(/\\(.)/, '\1')
+          args = args.split "\n"
+          # If the first character was '+' then we will append to
+          # existing set below
+          args.shift if arg[0,1] == '+'
+        else
+          # Not a multiple select... but normalize to array to make
+          # the code uniform
+          args = [ arg ]
+        end
+
+        fullchoices = @queryform[opt].choices
+        args.map! { |a|
+          a = Qute.getnonambiguous(a, fullchoices)
+          a = fullchoices.invert[a]
+        }
+
+        if @queryform[opt].multiple then
+          # Include original values if arg starts with '+'
+          args = (@queryform[opt].value + args).sort.uniq if arg[0,1] == '+'
+          @queryform[opt].value = args
+        else
+          @queryform[opt].value = args[0]
+        end
+      else
+        # Apply the value to the form field
+        @queryform[opt].value = arg
+      end
     end
   end
 end
