@@ -1,5 +1,5 @@
 #!/usr/local/bin/ruby -w
-# $Id: qute.rb,v 1.43 2004/09/16 16:19:38 agriffis Exp $
+# $Id$
 #
 # qutecmd -- Qute library for command-line utilities
 #

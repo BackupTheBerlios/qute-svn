@@ -1,5 +1,5 @@
 #!/usr/local/bin/ruby -w
-# $Id: qute.rb,v 1.43 2004/09/16 16:19:38 agriffis Exp $
+# $Id$
 #
 # qute -- Quick Utility for Tracking Errors
 # 
@@ -36,7 +36,7 @@ require 'uri'
 require 'tempfile'
 
 module Qute
-CVSREV = %Q$Revision: 1.43 $.gsub(/(^.*: | $)/, '')
+VERSIONMSG = "qute version #{%Q$Rev$.gsub(/(^.*: | $)/, '')}"
 
 # Parse SGML-like text.  Should be subclassed, with children overriding
 # methods of the form start_foo, end_foo, and foo_tag, which will be called
