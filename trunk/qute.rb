@@ -321,16 +321,32 @@ class FormField
   # Set the current value of the object.  If this FormField has
   # #choices (such as if it's a <select> element or a set of radio
   # buttons), then the value is actually set to one of the valid
-  # choices, as determined by Qute.#getnonambiguous.
+  # choices, as determined by Qute.getnonambiguous.
+  # 
+  # Note that if @multiple is set, then value will always be an array
+  # even if newval isn't...
   def value=( newval )
-    if @choices.length > 0 and newval != '' then
-      choicelist = ( @choices + @choices.keys ).uniq
-      choice = Qute.getnonambiguous(newval, choicelist)
-      setval = newval
-      newval = ( @choices.invert[choice] or choice )
-      #p [ setval, choice, @choices[choice], @choices.invert[choice], newval ]
+    if newval.is_a? Array
+      raise "Attempted to set a non-multiple value to array" unless @multiple
+    else
+      newval = [ newval ]
     end
-    #puts "setting (#{@name}) to (#{newval})"
+
+    if @choices.length > 0 and (newval.length > 1 or newval[0] != '')
+      choicelist = ( @choices + @choices.keys ).uniq
+      newval.map! { |v|
+        choice = Qute.getnonambiguous(v, choicelist)
+        # XXX This looks suspicious to me...  Why isn't it defined which
+        # (names vs. values) is supposed to be passed to this method?  At least
+        # I think the logic should be 
+        #    @choices[choice] ? choice :
+        #    ( @choices.invert[choice] or choice )
+        # -agriffis 25 Oct 2004
+        @choices.invert[choice] or choice
+      }
+    end
+
+    newval = newval[0] unless @multiple
     @value = newval
   end
 end
@@ -356,12 +372,12 @@ class Form < OrderedHash
   # convert self into a URL-escaped string for posting
   def querystring
     map { |field|
-      # XXX skipping blank field names might not be a long-term
-      # solution...
-      if field.name != ''
-        '%s=%s' % [CGI.escape(field.name), CGI.escape(field.value || '')]
-      end
-    }.join('&')
+      # skipping blank field names might not be a long-term solution...
+      next if field.name == ''
+      (field.multiple && field.value ? field.value : [ field.value ]).map { |v|
+        '%s=%s' % [CGI.escape(field.name), CGI.escape(v || '')]
+      }
+    }.flatten.join('&')
   end
 
   # parse a URL-escaped string and load the resulting values
@@ -388,8 +404,12 @@ class Form < OrderedHash
       # we want.
       next if field.hidden
 
-      # Load the value into our field.
-      field.value = value
+      # Handle multiple selects
+      if field.multiple and field.value
+        field.value << value
+      else
+        field.value = value
+      end
     }
   end
 
@@ -780,11 +800,13 @@ class FormParser < SGMLParser
       title = endcapture.strip
       value = @lastoption['value']
       @lastfield.choices[(value or title)] = (title or value)
-      # XXX This doesn't handle multiple default values at all.
-      # The last option found selected will be the default value for
-      # the field.  For example, bugzilla's bug_status field always
-      # defaults to CLOSED
-      @lastfield.value = (value or title) if @lastoption['selected']
+      if @lastoption['selected']
+        if @lastfield.multiple and @lastfield.value
+          @lastfield.value << (value or title)
+        else
+          @lastfield.value = (value or title)
+        end
+      end
       @lastoption = nil
     end
   end
