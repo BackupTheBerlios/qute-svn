@@ -324,7 +324,7 @@ class FormField
   # choices, as determined by Qute.getnonambiguous.
   # 
   # Note that if @multiple is set, then value will always be an array
-  # even if newval isn't...
+  # even if newval isn't.
   def value=( newval )
     if newval.is_a? Array
       raise "Attempted to set a non-multiple value to array" unless @multiple
@@ -336,12 +336,6 @@ class FormField
       choicelist = ( @choices + @choices.keys ).uniq
       newval.map! { |v|
         choice = Qute.getnonambiguous(v, choicelist)
-        # XXX This looks suspicious to me...  Why isn't it defined which
-        # (names vs. values) is supposed to be passed to this method?  At least
-        # I think the logic should be 
-        #    @choices[choice] ? choice :
-        #    ( @choices.invert[choice] or choice )
-        # -agriffis 25 Oct 2004
         @choices.invert[choice] or choice
       }
     end
@@ -437,7 +431,12 @@ class Form < OrderedHash
 
       # connect to web host unless we already have a matching http object
       if not @@http or @@http.address != @targeturl.host then
-        @@http = Net::HTTP.new(@targeturl.host, @targeturl.port)
+        if ENV['http_proxy']
+          proxyurl = URI::parse(ENV['http_proxy'])
+          proxyhost, proxyport = proxyurl.host, proxyurl.port
+        end
+        @@http = Net::HTTP.Proxy(proxyhost,
+          proxyport).new(@targeturl.host, @targeturl.port)
       end
 
       # send the data
