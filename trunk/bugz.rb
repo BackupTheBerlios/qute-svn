@@ -20,6 +20,33 @@ def getmainform
   return queryform
 end
 
+class BugColumnSet < QuteCmd::NonAmbiguousHash
+  @@columns = {
+    'ID'                =>  7,
+    'Sev'               =>  3,
+    'Pri'               =>  2,
+    'Plt'               =>  4,
+    'Assignee'          => 20,
+    'Status'            =>  4,
+    'Resolution'        =>  4,
+    'Summary'           => 45,
+  }
+
+  def initialize()
+    @@columns.each do | name, width |
+      self[name] = col = QuteCmd::OutputColumn.new(name)
+      col.width = width
+    end
+  end
+end
+
+class BugGrid < QuteCmd::SynopsisGrid
+  def initialize(cmdobj)
+    super
+    @colset = BugColumnSet.new
+  end
+end
+
 class BugList
   def initialize( queryform )
     @bugtable = queryform.post( Qute::TableParser )
@@ -40,7 +67,7 @@ end
 class BugzCommands
   def directory( cmdobj )
     #cmdobj.need_queryform = true
-    cmdobj.syngrid = QuteCmd::SynopsisGrid.new( cmdobj )
+    cmdobj.syngrid = BugGrid.new( cmdobj )
 
     cmdobj.parseargs!
     buglist = BugList.new( cmdobj.queryform )
