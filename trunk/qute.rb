@@ -349,6 +349,17 @@ class FormField
     newval = newval[0] unless @multiple
     @value = newval
   end
+
+  def to_s
+    if @name.nil? or @name == ''
+      ''
+    else
+      vals = (@multiple && @value) ? @value : [ @value ];
+      vals.map { |v|
+        '%s=%s' % [CGI.escape(@name), CGI.escape(v || '')]
+      }.join('&')
+    end
+  end
 end
 
 class Form < OrderedHash
@@ -371,13 +382,7 @@ class Form < OrderedHash
 
   # convert self into a URL-escaped string for posting
   def querystring
-    map { |field|
-      # skipping blank field names might not be a long-term solution...
-      next if field.name == ''
-      (field.multiple && field.value ? field.value : [ field.value ]).map { |v|
-        '%s=%s' % [CGI.escape(field.name), CGI.escape(v || '')]
-      }
-    }.flatten.join('&')
+    map { |field| field.to_s }.join('&')
   end
 
   # parse a URL-escaped string and load the resulting values
