@@ -1,0 +1,58 @@
+body {
+  font-family: Arial, sans-serif;
+}
+
+.logo {
+  float: left;
+  margin: 14px;
+}
+
+h1 {
+  float: left;
+  font-family: Book Antiqua, Bookman, serif;
+  font-size: 18px;
+  width: 210px;
+  background: #fff;
+}
+
+h1 .initial {
+  font-size: 25px;
+}
+
+.menu a {
+  background-color: #777;
+  padding: 2em;
+  padding-top: 0.2em;
+  padding-bottom: 0.3em;
+  margin: 1px;
+  text-decoration: none;
+}
+
+.menu a:hover {
+  background-color: #999;
+}
+
+.content, .menu {
+  margin-left: 220px;
+}
+
+a {
+  color: #b40;
+  font-weight: bold;
+}
+
+a:visited {
+  color: #da3;
+}
+
+
+.foot {
+  font-size: 11px;
+  border-top: 1px #bbb solid;
+  padding-top: 1em;
+  clear: both;
+}
+
+.foot img {
+  border: none;
+}
