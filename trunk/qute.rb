@@ -318,12 +318,6 @@ class FormField
     @title or @name
   end
 
-  # XXX: Apparently this is breaking things badly.  I'm now submitting
-  # forms with values set to options *strings* instead of to the valid
-  # *values* that they ought to be.   Ok, this may be fixed now with
-  # the new formula for assigning newval.  But now we have another
-  # problem -- why are we switching from "buglist.cgi" to "query.cgi"?
-
   # Set the current value of the object.  If this FormField has
   # #choices (such as if it's a <select> element or a set of radio
   # buttons), then the value is actually set to one of the valid
@@ -697,7 +691,7 @@ end
 # provides a DataObjGen interface without parsing any SGML at all.
 # This mix-in is used by FormParser, TableParser, and TextParser.
 module DataObjGen
-  # Data object (i.e. Table or FormList) created by a sublass's 'new' method.
+  # Data object (i.e. Table or FormList) created by a subclass's 'new' method.
   # This object must have accessors named 'cookie' and 'sourceurl'.
   attr_accessor :dataobj
 
@@ -767,7 +761,12 @@ class FormParser < SGMLParser
       field.password = true
     when 'button'
       field = nil
-    # XXX wrong wrong just makes it work with bugzilla
+    # XXX Bugzilla has a few submit buttons on its main query page (at
+    # least at Gentoo and probably other places).  The first and
+    # second are equivalent and nameless.  The remaining submit
+    # buttons are for manipulating the boolean charts...  If one of
+    # those gets into the posted form then we'll get back another
+    # query page instead of the results page.
     when 'submit'
       field = nil if @form['']
     end
@@ -781,6 +780,10 @@ class FormParser < SGMLParser
       title = endcapture.strip
       value = @lastoption['value']
       @lastfield.choices[(value or title)] = (title or value)
+      # XXX This doesn't handle multiple default values at all.
+      # The last option found selected will be the default value for
+      # the field.  For example, bugzilla's bug_status field always
+      # defaults to CLOSED
       @lastfield.value = (value or title) if @lastoption['selected']
       @lastoption = nil
     end
