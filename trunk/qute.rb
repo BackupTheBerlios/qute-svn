@@ -2,22 +2,22 @@
 # $Id$
 #
 # qute -- Quick Utility for Tracking Errors
-# 
+#
 # Copyright (c) 2002 - 2004 Hewlett-Packard Development Company, L.P.
 # All rights reserved.
-# 
+#
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are met:
-# 
-#   * Redistributions of source code must retain the above copyright notice,
-#     this list of conditions and the following disclaimer.
-#   * Redistributions in binary form must reproduce the above copyright
-#     notice, this list of conditions and the following disclaimer in the
-#     documentation and/or other materials provided with the distribution.
-#   * Neither the name of the Hewlett-Packard Development Company, L.P.  nor
-#     the names of its contributors may be used to endorse or promote products
-#     derived from this software without specific prior written permission.
-# 
+#
+# * Redistributions of source code must retain the above copyright notice,
+#   this list of conditions and the following disclaimer.
+# * Redistributions in binary form must reproduce the above copyright
+#   notice, this list of conditions and the following disclaimer in the
+#   documentation and/or other materials provided with the distribution.
+# * Neither the name of the Hewlett-Packard Development Company, L.P.  nor
+#   the names of its contributors may be used to endorse or promote products
+#   derived from this software without specific prior written permission.
+#
 # THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
 # AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 # IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -271,25 +271,52 @@ class OrderedHash < Array
   end
 end
 
+# Each FormField object represents an HTML form element, such as an
+# <input>, <textarea>, or <select> element.  They are usually created
+# by the FormParser class.
 class FormField
-  attr_accessor :name, :hidden, :password, :prompt
-  attr_reader   :choices, :value
+  # formal name of this form field
+  attr_accessor :name
+
+  # current value of this field
+  attr_reader   :value
+
+  # should we hide the existance of this field?
+  attr_accessor :hidden
+
+  # should we mask out the value of this field?
+  attr_accessor :password
+
+  # extra text describing this field
+  attr_accessor :prompt
+
+  # list of choices if this is multiple-choice, such as a <select>
+  # element or set of radio buttons.
+  attr_reader   :choices
+
+  # informal descriptive name of this field
   attr_writer   :title
 
   def initialize
-    @name = nil                 # formal name of this form field
-    @value = nil                # current value of this field
-    @hidden = false             # should we hide the existance of this field?
-    @password = false           # should we mask out the value of this field?
-    @prompt = nil               # extra text describing this field
-    @choices = OrderedHash.new  # list of choices if this is multiple-choice
-    @title = nil                # informal descriptive name of this field
+    @name = nil
+    @value = nil
+    @hidden = false
+    @password = false
+    @prompt = nil
+    @choices = OrderedHash.new
+    @title = nil
   end
 
+  # Returns the informal #title, or if none has been set, returns the
+  # formal #name of the HTML element.
   def title
     @title or @name
   end
 
+  # Set the current value of the object.  If this FormField has
+  # #choices (such as if it's a <select> element or a set of radio
+  # buttons), then the value is actually set to one of the valid
+  # choices, as determined by Qute.#getnonambiguous.
   def value=( newval )
     if @choices.length > 0 and newval != '' then
       choicelist = ( @choices + @choices.keys ).uniq
@@ -619,31 +646,37 @@ class TextData < String
 end
 
 
-# This module is a mix-in, defining pieces of the interface expected
-# for the first parameter of Form#post that is not provided by
-# SGMLParser.  Any parser classes that are to be used by qute
-# top-level command methods should include this module.
+# This module is a mix-in, defining pieces of a Parser interface.  The
+# main use of classes mixing in DataObjGen will be as the first
+# parameter to a Form.#post call.  This is not a sub-class of
+# SGMLParser because it may be useful to create a Parser class that
+# provides a DataObjGen interface without parsing any SGML at all.
+# This mix-in is used by FormParser, TableParser, and TextParser.
 module DataObjGen
   # Data object (i.e. Table or FormList) created by a sublass's 'new' method.
-  # This object must have accessors named 'cookie' and 'sourceurl'
+  # This object must have accessors named 'cookie' and 'sourceurl'.
   attr_accessor :dataobj
 
-  # Absolute URL from which was retrieved the data that was fed
-  # into this object
+  # Absolute URL from which the data was retrieved, that was then fed
+  # into this object.
   attr_reader :sourceurl
+
+  # When this #sourceurl is set, set the #dataobj's #sourceurl as well.
   def sourceurl=(url)
     @sourceurl = url
     @dataobj.sourceurl = url
   end
 
-  # Cookie to be passed along to generated object
+  # Cookie to be passed along to generated object.
   attr_reader :cookie
+
+  # When this #cookie is set, set the #dataobj's #cookie as well.
   def cookie=(c)
     @cookie = c
     @dataobj.cookie = c
   end
 
-  # Verify that there is no text left unparsed
+  # Verify that there is no text left unparsed.
   def verify
     if @parsebuf != '' then
       puts "Unparsed data:", @parsebuf
@@ -658,8 +691,8 @@ class FormParser < SGMLParser
   def initialize
     super
     @formlist = @dataobj = FormList.new
-    @lastfield = nil    # Refernce to the previously parsed form field
-    @lastoption = nil   # Refernce to the previously parsed select option token
+    @lastfield = nil    # Reference to the previously parsed form field
+    @lastoption = nil   # Reference to the previously parsed select option token
   end
 
   def start_form(token)
@@ -842,13 +875,15 @@ class MatchNone < MatchError
 end
 
 $nonambcache = {}
+# This function chooses exactly one string from option list _olist_
+# that matches the pattern _ptn_.  It does this through a series of
+# stages.  At each stage, if exactly one item matches, it is returned.
+# If more than one item matches at that stage, it is considered
+# ambiguous, and a Qute::MatchAmbiguous exception is raised.  If no
+# items match, we progress to the next stage, which is generally a
+# little "looser".  If there are no more stages, and still no match,
+# we raise a Qute::MatchNone exception.
 def Qute::getnonambiguous(ptn, olist)
-  # This function chooses exactly one item from optionlist <olist> that
-  # matches the pattern <ptn>.  At each stage, if exactly one item matches, it
-  # is returned.  If more than one item matches at that stage, it is
-  # considered ambiguous, and an exception is raised.  If no items match, we
-  # progress to the next stage, which is generally a little "looser".  If
-  # there are no more stages, and still no match, we raise an exception.
   match = []
   ptn ||= ''
 
