@@ -1,54 +1,59 @@
 body {
   font-family: Arial, sans-serif;
-}
-
-.logo {
-  float: left;
-  margin: 14px;
-}
-
-h1 {
-  float: left;
-  font-family: Book Antiqua, Bookman, serif;
-  font-size: 18px;
-  width: 210px;
+  font-size: 10pt;
   background: #fff;
 }
 
-h1 .initial {
-  font-size: 25px;
+.logo {
+  display: block;
+}
+
+.content {
+  margin-left: 124px;
+  padding-left: 0.5em;
+}
+
+.menu {
+  position: fixed;
+  float: left;
+  clear: left;
+  width: 124px;
 }
 
 .menu a {
-  background-color: #777;
-  padding: 2em;
-  padding-top: 0.2em;
-  padding-bottom: 0.3em;
-  margin: 1px;
-  text-decoration: none;
+  display: block;
+  color: #b40;
+  font-family: Book Antiqua, Times, serif;
+  font-size: 13pt;
 }
 
 .menu a:hover {
-  background-color: #999;
+  background: #ff8;
 }
 
-.content, .menu {
-  margin-left: 220px;
+.menu a:visited {
+  /*
+   * Removing the user's visual hint of which links they've followed
+   * is dangerous, if somewhat less so in a menu.  I just can't find a
+   * way to leave the visual hint and still look decent.
+   */
+  color: #b40;
 }
 
 a {
   color: #b40;
   font-weight: bold;
+  text-decoration: none;
 }
 
 a:visited {
-  color: #da3;
+  color: #f10;
 }
 
-
 .foot {
+  position: fixed;
+  bottom: 0;
   font-size: 11px;
-  border-top: 1px #bbb solid;
   padding-top: 1em;
   clear: both;
 }
@@ -56,3 +61,13 @@ a:visited {
 .foot img {
   border: none;
 }
+
+.qute, h1, h2, h3, h4, h5, h6 {
+  font-family: Book Antiqua, Times, serif;
+}
+
+h2 + p { margin-top: 0; }
+
+h1 { font-size: 18pt; }
+h2 { font-size: 16pt; margin-bottom: 0.3em; }
+

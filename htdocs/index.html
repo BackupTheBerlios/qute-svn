@@ -5,36 +5,53 @@
   <head>
     <title>Qute Utility for Tracking Errors</title>
 
+    <link rel="shortcut icon" href="logo03-16.png" />
     <link type="text/css" rel="stylesheet" title="Qute" href="qute.css" />
   </head>
 
   <body>
 
-    <h1>
-      <img class="logo" src="logo03-onwhite.png"
-      width="74" height="87" alt=""/>
-      <span class="initial">Q</span>ute
-      <span class="initial">U</span>tility for
-      <span class="initial">T</span>racking
-      <span class="initial">E</span>rrors
-    </h1>
-
     <div class="menu">
+      <img class="logo" src="logo03-onwhite.png" width="74"
+      height="87" alt="Qute Utility for Tracking Errors"/>
+
       <a href="http://developer.berlios.de/projects/qute/">Summary</a>
       <a href="http://developer.berlios.de/svn/?group_id=2215">Source</a>
     </div>
 
     <div class="content">
 
-    <p>The goal of this project is to provide APIs and tools to allow
-    user-customized interaction with legacy web services, for example
-    a command-line tool to access Bugzilla or a Vim interface to a
-    Wiki.</p>
+      <h1>Qute Utility for Tracking Errors</h1>
 
-    <p>
-    Unfortunately, the most interesting thing we've got so far is our
-    <a href="http://svn.berlios.de/viewcvs/qute">source</a>
+      <p>The goal of <span class="qute">Qute</span> is to provide APIs
+      and tools to allow user-customized interaction with legacy web
+      services, for example a command-line tool to access Bugzilla or a
+      Vim interface to a Wiki.</p>
+
+      <p>The most interesting thing we've got so far is our <a
+      href="http://svn.berlios.de/viewcvs/qute">source</a>
       repository.</p>
+
+      <h2>Current Status</h2>
+
+      <p><span class="qute">Qute</span> is currently made up of two
+      Ruby libraries.  <tt>qute.rb</tt> provides an API for
+      interacting with web services, making it easy to write programs
+      that fill out and submit forms, collect information from HTML
+      tables, and follow hyperlinks.  <tt>qutecmd.rb</tt> adds
+      features useful for command-line tools, such as formatting ASCII
+      result tables and filling out web forms at a command prompt.</p>
+
+      <p>These modules have proven themselves by providing the
+      foundation for front-ends to two very different bug tracking web
+      applications.  Unfortuantely, both <span
+        class="qute">Qute</span>-based tools are only used internally
+      for proprietary web apps by companies that have chosen not to
+      release all of the code.</p>
+
+      <p>We are currently working to release as much relevant code
+      as possible, after which we plan to begin working on an
+      open-source front end for bugzilla.</p>
 
     </div>
 
