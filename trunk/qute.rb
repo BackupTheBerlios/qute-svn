@@ -829,10 +829,15 @@ class FormParser < SGMLParser
     # process text for the previous choice, if there were any
     finish_option
 
-    # set value to first choice if no options were marked as
-    # 'selected' and it is not a multiple-choice field
-    if @lastfield and not @lastfield.multiple
-      @lastfield.value ||= @lastfield.choices.keys[0]
+    # if no options were marked 'selected' then set a default value
+    if @lastfield
+      if @lastfield.multiple
+        # default for multiple is the empty list
+        @lastfield.value ||= []
+      else
+        # default for non-multiple is the first in the list
+        @lastfield.value ||= @lastfield.choices.keys[0]
+      end
     end
     @lastfield = nil
   end
