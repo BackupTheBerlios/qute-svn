@@ -1,4 +1,4 @@
-#!/usr/local/bin/ruby -w
+#!/usr/bin/ruby -w
 # bugz -- front end for Qute that interacts with Bugzilla
 # Copyright:: Copyright (c) Sep 2004, Chris Houser <chouser@bluweb.com>
 # License::   GNU General Public License Version 2
@@ -16,11 +16,11 @@ queryform = Qute::Form.new(url).post(Qute::FormParser).detect { |form|
   form['query_format']
 }
 
-#p queryform
-
-queryform['short_desc'].value = 'gvim'
+queryform['short_desc'].value = 'vim'
 
 resp, data = queryform.post
+
+puts resp.body
 
 #p resp
 #p resp.methods
@@ -29,7 +29,7 @@ resp, data = queryform.post
 #end
 #puts resp.header['location']
 
-puts resp.body
+#puts resp.body
 
 __END__
 

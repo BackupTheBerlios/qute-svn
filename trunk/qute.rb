@@ -144,7 +144,7 @@ class SGMLParser
 
   def initialize
     @parsebuf = ''      # buffer of input text yet to be parsed
-    @pre = false        # does captured text retain it's whitespace formatting?
+    @pre = false        # does captured text retain its whitespace formatting?
     @capture = true     # are we currently capturing text tokens?
     @capobj = CaptureObj.new   # text and data captured so far
   end
@@ -214,9 +214,9 @@ class SGMLParser
         # start and end tokens are processed by calling methods named
         # start_foo or end_foo, and foo_tag.  any of these that are not
         # defined by a subclass are caught and thrown away by method_missing
+        #puts "Processing %s_%s" % [token.object, token.tag]
         self.send('%s_%s' % [token.object, token.tag], token)
         self.send('%s_tag' % [token.tag], token)
-
       end
 
       if @capture
@@ -245,7 +245,7 @@ class OrderedHash < Array
   end
 
   def []=(key, val)
-    delete key
+    delete key if @hash[key]
     @hash[key] = val
     self << val
   end
@@ -255,7 +255,7 @@ class OrderedHash < Array
   end
 
   def delete(key)
-    super self[key]
+    super self[key]     # Array#delete takes val, not key
     @hash.delete key
   end
 
@@ -334,7 +334,7 @@ class FormField
       choice = Qute.getnonambiguous(newval, choicelist)
       setval = newval
       newval = ( @choices.invert[choice] or choice )
-      p [ setval, choice, @choices[choice], @choices.invert[choice], newval ]
+      #p [ setval, choice, @choices[choice], @choices.invert[choice], newval ]
     end
     #puts "setting (#{@name}) to (#{newval})"
     @value = newval
@@ -362,7 +362,11 @@ class Form < OrderedHash
   # convert self into a URL-escaped string for posting
   def querystring
     map { |field|
-      '%s=%s' % [CGI.escape(field.name), CGI.escape(field.value || '')]
+      # XXX skipping blank field names might not be a long-term
+      # solution...
+      if field.name != ''
+        '%s=%s' % [CGI.escape(field.name), CGI.escape(field.value || '')]
+      end
     }.join('&')
   end
 
@@ -416,7 +420,6 @@ class Form < OrderedHash
       if not @@http or @@http.address != @targeturl.host then
         @@http = Net::HTTP.new(@targeturl.host, @targeturl.port)
       end
-      puts @targeturl
 
       # send the data
       headers = {
@@ -426,10 +429,9 @@ class Form < OrderedHash
       }
       headers['Cookie'] = @cookie if @cookie
       path = @targeturl.path + (@targeturl.query ? '?' + @targeturl.query : '')
-      puts "Query:"
-      p path
-      p querystring
-      p headers
+#     puts "\n--------------------\nQuery\n--------------------\n"
+#     p [ path, querystring, headers ]
+#     puts "--------------------\nEnd Query\n--------------------\n"
       if @method == 'get' or querystring == ''
           querystring == '' or path += '?' + querystring
           resp = @@http.get(path, headers, dest)
@@ -442,6 +444,11 @@ class Form < OrderedHash
       if RUBY_VERSION < "1.8"
           resp = resp[0]
       end
+
+#     puts "\n--------------------\nResponse\n--------------------\n"
+#     p resp
+#     puts resp.body
+#     puts "--------------------\nEnd Response\n--------------------\n"
 
       if resp.header['location']
         @targeturl = @targeturl.merge( resp.header['location'] )
@@ -463,6 +470,16 @@ class Form < OrderedHash
       # return the raw response data from the web server
       return [resp, resp.body]
     end
+  end
+
+  def inspect
+    "( @@http = #{@@http.inspect}\n" +
+    "  @sourceurl = #{@sourceurl.inspect}\n" +
+    "  @targeturl = #{@targeturl.inspect}\n" +
+    "  @cookie = #{@cookie.inspect}\n" +
+    "  @method = #{@method.inspect}\n  " +
+    "  #{super}\n" +
+    ")"
   end
 end
 
@@ -675,7 +692,7 @@ end
 
 # This module is a mix-in, defining pieces of a Parser interface.  The
 # main use of classes mixing in DataObjGen will be as the first
-# parameter to a Form.#post call.  This is not a sub-class of
+# parameter to a Form#post call.  This is not a sub-class of
 # SGMLParser because it may be useful to create a Parser class that
 # provides a DataObjGen interface without parsing any SGML at all.
 # This mix-in is used by FormParser, TableParser, and TextParser.
@@ -750,6 +767,9 @@ class FormParser < SGMLParser
       field.password = true
     when 'button'
       field = nil
+    # XXX wrong wrong just makes it work with bugzilla
+    when 'submit'
+      field = nil if @form['']
     end
 
     # add this field to the form
