@@ -114,15 +114,15 @@ class StringFile
   def to_s;       @buf.join; end
 end
 
-# Use this method to catch defout and route it through a pager, add extra
+# Use this method to catch stdout and route it through a pager, add extra
 # text, or send as email.
 def QuteCmd::pkgoutput(cmdobj, pagerok = false)
-  oldout = $defout
+  oldout = $stdout
 
   # Set up pager
   if cmdobj.setting.has_key? 'mailto'
     mailout = StringFile.new
-    $defout = mailout
+    $stdout = mailout
   elsif pagerok and not cmdobj.setting.has_key? 'nopage'
     # Get the pager we want to use
     pagercmd = (cmdobj.setting['pager'] or ENV['QUTEPAGER'] or
@@ -130,7 +130,7 @@ def QuteCmd::pkgoutput(cmdobj, pagerok = false)
     begin
       # Use the pager as the default output
       pagerio = IO.popen("#{pagercmd} -", 'w')
-      $defout = pagerio
+      $stdout = pagerio
     rescue Errno::ENOENT
       # Error launching pager -- silently ignore
     end
@@ -140,7 +140,7 @@ def QuteCmd::pkgoutput(cmdobj, pagerok = false)
   yield
 
   # Go back to normal stdout
-  $defout = oldout
+  $stdout = oldout
 
   # If we're using mailout, send it where it belongs
   if mailout
@@ -239,7 +239,7 @@ def Qute::getline(prompt)
     return Readline.readline(prompt, true)
   else
     # No readline module -- use standard stuff.
-    $defout.print prompt
+    $stdout.print prompt
     return $stdin.gets
   end
 end
@@ -523,7 +523,7 @@ class OutputGrid
       col = (@colset[$1] or OutputColumn.new($1))
       col.align = $2 == '-' ? 'left' : 'right'
       col.width = $3.to_i
-    elsif @colset[colname]
+    elsif @colset and @colset[colname]
       # No details were given, and we've got good defaults -- use them.
       col = @colset[colname]
     else
