@@ -35,14 +35,6 @@ require 'cgi'
 require 'uri'
 require 'tempfile'
 
-begin
-  require 'readline'
-  Readline.completion_proc = proc {}
-  #debug "loaded readline"
-rescue LoadError
-  #debug "failed to load readline"
-end
-
 module Qute
 CVSREV = %Q$Revision: 1.43 $.gsub(/(^.*: | $)/, '')
 
@@ -53,13 +45,13 @@ CVSREV = %Q$Revision: 1.43 $.gsub(/(^.*: | $)/, '')
 # objects via the << method.
 class SGMLParser
   OPTSRE = %r{
-    ([^\s>=]+) (?:=\s*"([^"]*)" | =\s*'([^']*)' | =\s*([^\s>]+))?
+    ([^\s>=]+) (?:=\s*"([^"]*)" | =\s*'([^']*)' | =\s*([^\s>]*))?
   }x
 
   SGMLRE = %r{
     (\A[^&<]+) |                                # text
    # this next line breaks ruby on Tru64:
-   #(\A<[^<>=]*(?=<)) |                         # broken text
+    (\A<\W*[^<>=]*(?=<)) |                      # broken text
     (\A&\#?\w*(?=\W);?) |                       # entity
     (\A<!--(?:.|\s)*?-->) |                     # comment
     (\A</[-:\w]+>) |                            # close tag
@@ -96,7 +88,7 @@ class SGMLParser
       # calculate object and tag
       i = 0
       @object, @tag = if @matchdata[i+=1] then ['text', '']
-       #elsif @matchdata[i+=1] then ['text', '']
+        elsif @matchdata[i+=1] then ['text', '']
         elsif @matchdata[i+=1] then ['entity', '']
         elsif @matchdata[i+=1] then ['comment', '']
         elsif @matchdata[i+=1] then ['end',%r{\A</(.*)>\Z}.match(to_s)[1].downcase]
@@ -113,7 +105,12 @@ class SGMLParser
       @s = if pre then
         @matchdata.to_s
       else
-        CGI.unescapeHTML(@matchdata.to_s.tr_s(" \t\n", ' ').strip)
+        # XXX: by not stripping this string, we could see multiple
+        # spaces in a row, but I think this is better than the
+        # possibility of completely eliminating spaces under other
+        # circumstances.  Perhaps the collapsing should be done by
+        # CaptureObj instead of the Token?
+        CGI.unescapeHTML(@matchdata.to_s.tr_s(" \t\n", ' '))
       end
       @s
     end
@@ -225,7 +222,7 @@ class SGMLParser
       if @capture
         case token.object
         when 'text'
-          # text tokens are thrown away unless we are capture is true, in which
+          # text tokens are thrown away unless capture is true, in which
           # case we append the text to our capture buffer
           #XXX: add support for entities
           @capobj << token.to_s(@pre)
@@ -275,8 +272,8 @@ class OrderedHash < Array
 end
 
 class FormField
-  attr_accessor :name, :value, :hidden, :password, :prompt
-  attr_reader   :choices
+  attr_accessor :name, :hidden, :password, :prompt
+  attr_reader   :choices, :value
   attr_writer   :title
 
   def initialize
@@ -291,6 +288,16 @@ class FormField
 
   def title
     @title or @name
+  end
+
+  def value=( newval )
+    if @choices.length > 0 and newval != '' then
+      choicelist = ( @choices + @choices.keys ).uniq
+      choice = Qute.getnonambiguous(newval, choicelist)
+      newval = ( @choices[choice] or @choices.invert[choice] )
+    end
+    #puts "setting (#{@name}) to (#{newval})"
+    @value = newval
   end
 end
 
@@ -363,16 +370,16 @@ class Form < OrderedHash
 
     # connect to web host unless we already have a matching http object
     if not @@http or @@http.address != @targeturl.host then
-      @@http = Net::HTTP.new(@targeturl.host)
+      @@http = Net::HTTP.new(@targeturl.host, @targeturl.port)
     end
 
     # send the data
     headers = {
       'Content-Type' => 'application/x-www-form-urlencoded',
-      'Cookie' => @cookie || '',
       'UserAgent' => 'qute',
       'Referer' => @sourceurl ? @sourceurl.to_s : @targeturl.to_s
     }
+    headers['Cookie'] = @cookie if @cookie
     path = @targeturl.path + (@targeturl.query ? '?' + @targeturl.query : '')
     #puts "Query:"
     #p path
@@ -607,19 +614,16 @@ class Table < Array
   end
 end
 
-class RawAsciiReport < Array
-  attr_accessor :sourceurl, :cookie
-end
-
 class TextData < String
   attr_accessor :sourceurl, :cookie
 end
 
 
-# This class defines an interface between Form#post and SGMLParser.  Any
-# parser classes that are to be used by qute top-level command methods should
-# inherit from this class.
-class DataObjGen < SGMLParser
+# This module is a mix-in, defining pieces of the interface expected
+# for the first parameter of Form#post that is not provided by
+# SGMLParser.  Any parser classes that are to be used by qute
+# top-level command methods should include this module.
+module DataObjGen
   # Data object (i.e. Table or FormList) created by a sublass's 'new' method.
   # This object must have accessors named 'cookie' and 'sourceurl'
   attr_accessor :dataobj
@@ -646,80 +650,11 @@ class DataObjGen < SGMLParser
       raise "Parse error: some text still unparsed"
     end
   end
-end
+end # module DataObjGen
 
-# This class breaks the above rule -- it parses the RawAscii report, and as
-# such does not inherit from SGMLParser.  Nevertheless, it provides the same
-# interface as a DataObjGen would.
-class RawAsciiParser
-  # The data object for RawAsciiParser is a RawAsciiReport, created by a
-  # sublass's 'new' method. This object must have accessors named 'cookie' and
-  # 'sourceurl'
-  attr_accessor :dataobj
+class FormParser < SGMLParser
+  include DataObjGen
 
-  # Absolute URL from which was retrieved the data that was fed
-  # into this object
-  attr_reader :sourceurl
-  def sourceurl=(url)
-    @sourceurl = url
-    @dataobj.sourceurl = url
-  end
-
-  # Cookie to be passed along to generated object
-  attr_reader :cookie
-  def cookie=(c)
-    @cookie = c
-    @dataobj.cookie = c
-  end
-
-  # Verify that there is no text left unparsed.  This doesn't make sense for
-  # Raw Ascii reports, so we simply never complain.
-  def verify
-    #p @dataobj
-  end
-
-  # Now we move on to the Parser interface
-  def initialize
-    @rawreport = @dataobj = RawAsciiReport.new
-    @parsebuf = ''
-
-    @crntqar = nil
-    @crntfield = nil
-  end
-
-  def <<(addbuf)
-    # add new data to parsebuf
-    @parsebuf << addbuf
-
-    # parse as much at the beginning as parsebuf as we can
-    loop do
-      # peel one line off the beginning of the text buffer and process it
-      line = nil
-      @parsebuf.sub!(/^.*?\n/) do
-        line = $&
-        ''
-      end or break
-
-      # put this line in the appropriate place
-      case line
-      when /^(QarId): *(\d*)( UNPUBLISHED)?/
-        @crntqar = NonAmbiguousHash.new
-        @crntqar[$1] = $2
-        @crntqar['Publish'] = 'N' if $3
-        @dataobj << @crntqar
-      when /^ (\w+): *(.*)/
-        @crntqar or raise "RawAscii parse error: #{line}"
-        @crntfield = $1
-        @crntqar[$1] = $2
-      when /^  (.*\n)/
-        @crntqar[@crntfield] += $1
-      end
-    end
-  end
-end
-
-
-class FormParser < DataObjGen
   def initialize
     super
     @formlist = @dataobj = FormList.new
@@ -763,7 +698,7 @@ class FormParser < DataObjGen
 
   def finish_option
     if @lastoption then
-      title = endcapture
+      title = endcapture.strip
       value = @lastoption['value']
       @lastfield.choices[(value or title)] = (title or value)
       @lastfield.value = (value or title) if @lastoption['selected']
@@ -798,8 +733,9 @@ class FormParser < DataObjGen
   end
 
   def start_textarea(token)
-    @form[token['name']] = @lastfield = FormField.new
-    @lastfield.name = token['name']
+    name = token['name'] || 'UnnamedTextarea'
+    @form[name] = @lastfield = FormField.new
+    @lastfield.name = name
     startcapture(pre = true)
   end
 
@@ -809,7 +745,9 @@ class FormParser < DataObjGen
   end
 end
 
-class TableParser < DataObjGen
+class TableParser < SGMLParser
+  include DataObjGen
+
   def initialize
     super
     @table = @dataobj = Table.new
@@ -847,7 +785,9 @@ class TableParser < DataObjGen
   def end_th(token)     pushcolumn; end
 end
 
-class TextParser < DataObjGen
+class TextParser < SGMLParser
+  include DataObjGen
+
   def initialize
     super
     @text = @dataobj = TextData.new('')
@@ -880,329 +820,6 @@ class TextParser < DataObjGen
   end
 end
 
-def Qute::getline(prompt)
-  if defined? Readline
-    # We have the Readline module.  Use it.
-    return Readline.readline(prompt, true)
-  else
-    # No readline module -- use standard stuff.
-    $stdout.print prompt
-    return $stdin.gets
-  end
-end
-
-class FormFiller
-end
-
-class FormPrompter < FormFiller
-  # XXX: try to make completion list ordered (not alphabetical)
-  def FormPrompter.fillfields(fieldlist)
-    if defined? Readline
-      Readline.completion_case_fold = true  #XXX: shouldn't trample here
-      oldproc = Readline.completion_proc
-    end
-    begin
-      fieldlist.each do |field|
-        next if not field or field.hidden
-
-        # set the readline completion function for this field
-        # XXX: seems to have trouble when choices contain spaces
-        if defined? Readline
-          Readline.completion_proc = proc { |str|
-            field.choices.select { |choice|
-              choice[0...str.length].downcase == str.downcase
-            }
-          }
-        end
-
-        # prompt the user and verify what is entered
-        [0].each do
-          default = (field.value and field.choices[field.value] or field.value)
-          textval = Qute::getline('%s [%s]: ' % [field.title, default]).strip
-
-          # If user entered something, adjust the field's value to match
-          if textval != default and textval != '' then
-
-            # fields with multiple choice must map from title back to value
-            # XXX: allow caller to add its own short names to these choices
-            # XXX: should we allow the user to enter value instead of a title?
-            if field.choices.length > 0 then
-              begin
-                choice = Qute.getnonambiguous(textval, field.choices)
-                if choice != textval
-                  # the text entered by the user was incomplete, but we found
-                  # a non-ambiguous match.  display what we chose.
-                  puts choice
-                end
-                textval = field.choices.invert[choice]
-              rescue MatchError
-                # XXX: should caller handle this condition flexibly?
-                puts "\nBad entry, try again."
-                if field.choices.length < 20 then
-                  puts "Choose one of:\n  %s" % [field.choices.join("\n  ")]
-                end
-                redo
-              end
-            end
-
-            # apply value to field
-            field.value = textval
-          end
-        end
-      end
-
-    rescue Exception
-      # Get off of the prompt line
-      puts
-      raise
-    ensure
-      Readline.completion_proc = oldproc if oldproc
-    end
-  end
-end
-
-class FormTextEditor < FormFiller
-  def FormTextEditor.writefile(file, fieldlist)
-    # put header on text file
-    file.puts "## To fill in this form, add or change the content in-between"
-    file.puts "## pairs of dashed lines.  Changes to any other portion of"
-    file.puts "## this file will be ignored."
-
-    # generate some text for each form field
-    fieldlist.each do |field|
-      next if field.hidden or field.password
-
-      # write out the prompt
-      file << "\n\n"
-      file << field.prompt if field.prompt
-      file << "o %s:\n" % field.title
-
-      # write out the body prefix
-      sep = ('-      '*11)[0..-field.name.length-2] + (" - %s\n" % field.name)
-      file << sep
-
-      # write out the body
-      case field.choices.length
-      when 0..1       # this is a simple text entry field
-        file << field.value << "\n"
-      when 2..25      # multiple-choices to be represented with checkboxes
-        field.choices.each do |choice|
-          checked = field.choices[field.value] == choice
-          file << (checked ? '[x] ' : '[ ] ') << choice << "\n"
-        end
-      else            # multi-choice, but too many to list: use choice title
-        file << field.choices[field.value] << "\n"
-      end
-
-      # write out the body suffix
-      file << sep
-    end
-  end
-
-  # XXX: collect form parsing errors and report all to the user at the end
-  # XXX: make all the parsing more robust and catch more user errors
-  def FormTextEditor.readfile(file, fieldlist)
-    sepre = %r{^(?:- {6}){4,}-? * - (.*)$}
-    while not file.eof? do
-      # read in text looking for a field body
-      file.each_line { |line| line =~ sepre and break }
-      fieldname = $1
-
-      # read in body looking for suffix
-      body = ''
-      file.each_line do |line|
-        break if line =~ sepre
-        body << line
-      end
-      $1 == fieldname or raise "Broken field body %s/%s" % [$1, fieldname]
-      body.chop!
-
-      # process body
-      field = fieldlist.detect { |field| field.name == fieldname }
-      if field.choices.length > 0 then
-        # multiple-choice -- we need to figure out if there are checkboxes
-        bodylines = body.split("\n")
-        if bodylines.length > 1 then  # XXX: make this check more complete
-          # multiple-choice with checkboxes
-          bodylines.each do |line|
-            if line[0..3].downcase == '[x] ' then
-              field.value = field.choices.invert[line[4..-1]] or raise "Bad form value"
-              break
-            end
-          end
-        else
-          # multiple-choice with body as choice title
-          field.value = field.choices.invert[body] or raise "Bad form value: (%s) %s" % [body, field.choices]
-        end
-      else
-        # simple text-entry field
-        field.value = body
-      end
-    end
-  end
-
-  def FormTextEditor.fillfields(fieldlist)
-    # create temp file with form text
-    file = Tempfile.new('qute')
-    FormTextEditor.writefile(file, fieldlist)
-    file.close
-
-    # launch editor to modify temp file
-    fork { exec ENV['EDITOR'] || "vi", file.path }
-    Process.wait
-
-    # read in form text and apply to form
-    file.open
-    FormTextEditor.readfile(file, fieldlist)
-    file.close(true)
-  end
-end
-
-class FormCommandLine < FormFiller
-  def FormCommandLine.fillfields(fieldlist, pairs)
-    pairs.each do |pair|
-      key, val = pair.split('=')
-      next unless val
-      key.downcase!
-      matchfields = fieldlist.select { |field|
-        field.name[0,key.length].downcase  == key or
-        field.title[0,key.length].downcase == key
-      }
-      matchfields[0].value = val
-    end
-  end
-end
-
-# This class makes it easy to generate ANSI escape sequences for changing the
-# terminal foreground color, background color, and attribute.  It provides
-# constants for each of the foreground colors and attributes, and the class
-# method 'block' so that you don't have to use the full class identifier for
-# each constant.
-class AnsiColor
-  attr_reader :pairs
-
-  def initialize(*p); @pairs = p;                       end
-  def BG;             AnsiColor.new('4'+pairs[0][1,1]); end #Background version
-  def +(x);           AnsiColor.new(pairs + x.pairs);   end #Combine AnsiColors
-  def to_s;           "\e[" + pairs.join(';') + 'm';    end #Generate ANSI
-
-  # Allow a block of code to refer to AnsiColor's class constants
-  def AnsiColor.block(usecolor = true, &block)
-    if usecolor
-      instance_eval(&block)
-    else
-      AnsiColorNull.block(&block)
-    end
-  end
-
-  # This allows the colors to be named as lower-case method calls, since the
-  # upper-cased constants seem to have stopped working
-  def AnsiColor.method_missing(name)
-    color = name.to_s
-    color = color[0..0].upcase + color[1..-1]
-    eval color
-  end
-
-  # Color and attribute constants
-  Black     = AnsiColor.new('30');  Normal    = AnsiColor.new('00')
-  Red       = AnsiColor.new('31');  Bold      = AnsiColor.new('01')
-  Green     = AnsiColor.new('32');
-  Yellow    = AnsiColor.new('33');
-  Blue      = AnsiColor.new('34');  Under     = AnsiColor.new('04')
-  Magenta   = AnsiColor.new('35');
-  Cyan      = AnsiColor.new('36');  Hidden    = AnsiColor.new('06')
-  White     = AnsiColor.new('37');  Reverse   = AnsiColor.new('07')
-end
-class AnsiColorNull < AnsiColor
-  def AnsiColorNull.block(&block); instance_eval(&block); end
-  def AnsiColorNull.method_missing(name); ''; end
-  Black   = ''; Red     = ''; Green   = ''; Yellow  = ''; Blue    = '';
-  Magenta = ''; Cyan    = ''; White   = ''; Normal  = ''; Bold    = '';
-  Under   = ''; Hidden  = ''; Reverse = '';
-end
-
-def Qute::getmainforms(needlogin = false, forcelogin = false)
-  formsfile = ENV['HOME'] + '/.qute.forms'
-  mainforms = nil
-  toolate = Time.now - (24 * 60 * 60 * 7)       # 7 days
-
-  if File.exists? formsfile and File.stat(formsfile).mtime > toolate and not forcelogin then
-    # XXX: This may not be correct.  The cookie may have expired, or the main
-    # form page may have changed.  We should detect that somehow, re-login,
-    # and re-capture the main forms.  Note I have never observed any of these
-    # unhandled conditions.
-    File.open(formsfile) do |file|
-      if (file.lstat.mode & 0066) > 0 then
-        puts "Warning: %s permissions too loose" % formsfile
-      end
-      mainforms = Marshal.load(file)
-    end
-
-  else
-    # The cached login isn't good.  We'll have to do something about that.
-
-    # webqar2 starting url
-    url = 'http://webster.zk3.dec.com/webqar2/WebQar2.pl'
-
-    # If we can do this anonymously, don't force a login -- use the browse
-    # mode instead.  If the use asked to log in, or if we are entering,
-    # updating, etc... then force a login.
-    loginform = nil
-    if not needlogin and not forcelogin then
-      loginform = Form.new(url).post(FormParser).detect { |form|
-        form['UserClass'].value =~ /browse/i
-      }
-      loginform or raise %Q(WebQar2 login page has changed or is down:\n#{url})
-    else
-      loginform = Form.new(url).post(FormParser).detect { |form|
-        form['Password']
-      }
-      loginform or raise %Q(WebQar2 login page has changed or is down:\n#{url})
-
-      begin
-        # get username
-        username = Qute::getline('WebQAR2 Username [%s]: ' % ENV['USER']).chomp
-        loginform['Username'].value = username == '' ? ENV['USER'] : username
-
-        # get password
-        system('stty -echo')
-        loginform['Password'].value = Qute::getline('Password: ').chomp
-        puts
-      rescue Exception
-        # Get off of the prompt line
-        puts
-        raise
-      ensure
-        system('stty echo')
-      end
-    end
-
-    # point to live database
-    loginform.targeturl.merge('/webqar2/live/')
-
-    # get past initial alert page, collecting the cookie along the way
-    resp, data = loginform.post
-    loginform.cookie = $1 if resp['set-cookie'] =~ /^([^']*)/
-
-    # return the main forms
-    mainforms = loginform.post(FormParser)
-    if not mainforms.detect { |form| form['QarId'] }
-      raise "Incorrect username or password?"
-    end
-
-    # if this was a real login, save off the forms
-    if needlogin or forcelogin then
-      File.open(formsfile, 'w') do |file|
-        file.chmod(0600)
-        Marshal.dump(mainforms, file)
-      end
-    end
-  end
-
-  mainforms
-end
-
-
 class MatchError < RuntimeError
   attr :ptn
   attr :olist
@@ -1231,14 +848,13 @@ def Qute::getnonambiguous(ptn, olist)
   # is returned.  If more than one item matches at that stage, it is
   # considered ambiguous, and an exception is raised.  If no items match, we
   # progress to the next stage, which is generally a little "looser".  If
-  # there are not more stages, and still no match, we raise an exception.
+  # there are no more stages, and still no match, we raise an exception.
   match = []
   ptn ||= ''
 
   # Try cache first
   cacheid = [ olist.hash, ptn.hash ]
-  value = $nonambcache[cacheid]
-  return value if value
+  value = $nonambcache[cacheid] and return value
 
   # Filter empty strings from olist
   olist = olist.select { |item| item != '' }
@@ -1287,44 +903,5 @@ def Qute::getnonambiguous(ptn, olist)
   raise MatchNone.new(ptn, olist)
 end
 
-class NonAmbiguousHash < Hash
-  def [](key)
-    begin
-      realkey = Qute.getnonambiguous(key, self.keys)
-    rescue MatchNone
-      return nil
-    end
-    super(realkey)
-  end
-end
-
 
 end # module Qute
-
-class String
-  def lfit(width) self[0,width].ljust(width) end
-  def rfit(width) self[0,width].rjust(width) end
-
-  def format(*hashlist)
-    self.gsub(/\{ ([^{}]*?) ([+-]\d*)? \}/x) do
-      key, pad = $1, $2.to_i
-      value = nil
-      hashlist.each do |hash|
-        value = hash[key] and break
-      end
-      value = value.to_s  # This kills the #'s
-      if pad < 0 then
-        value.lfit(pad.abs)
-      elsif pad > 0 then
-        value.rfit(pad)
-      else
-        value
-      end
-    end
-  end
-end
-
-class NilClass
-  def lfit(width) '#' * width end
-  def rfit(width) '#' * width end
-end
