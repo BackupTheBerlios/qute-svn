@@ -719,13 +719,16 @@ class OptsFormFields
 
   def validopts(cmdobj)
     opts = @queryform.map { |field| 
-      [ field.name, (field.choices.length > 0 ? ArgRequired : ArgOptional) ] 
+      if field.choices.length > 0 and not field.multiple
+        [ field.name, ArgRequired ]
+      else
+        [ field.name, ArgOptional ]
+      end
     }
 
     # Add aliases for several of the form fields
     self.fieldalias.each { |ali,name|
-      opts.push [ ali, 
-        @queryform[name].choices.length > 0 ? ArgRequired : ArgOptional ]
+      opts.push [ ali, opts.assoc(name)[1] ]
     }
 
     # Return the list of options OptsFormFields knows how to handle.
