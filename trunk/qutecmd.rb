@@ -30,6 +30,26 @@
 # ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+class String
+  def lfit(width) self[0,width].ljust(width) end
+  def rfit(width) self[0,width].rjust(width) end
+end
+
+class NilClass
+  def lfit(width) '#' * width end
+  def rfit(width) '#' * width end
+end
+
+module QuteCmd
+
+begin
+  require 'readline'
+  Readline.completion_proc = proc {}
+  #debug "loaded readline"
+rescue LoadError
+  #debug "failed to load readline"
+end
+
 # Determine the width of the terminal using ioctl(TIOCGWINSZ)
 def QuteCmd::gettermsize
   return $termsize if defined? $termsize
@@ -62,18 +82,6 @@ def QuteCmd::gettermsize
   return $termsize
 end
 
-class String
-  def lfit(width) self[0,width].ljust(width) end
-  def rfit(width) self[0,width].rjust(width) end
-end
-
-class NilClass
-  def lfit(width) '#' * width end
-  def rfit(width) '#' * width end
-end
-
-module QuteCmd
-
 # Mixin to String to wrap text that looks wrappable
 module String
   def rewrap(cols = nil)
@@ -104,14 +112,6 @@ class StringFile
   def initialize; @buf = []; end
   def write(str); @buf << str; end
   def to_s;       @buf.join; end
-end
-
-begin
-  require 'readline'
-  Readline.completion_proc = proc {}
-  #debug "loaded readline"
-rescue LoadError
-  #debug "failed to load readline"
 end
 
 # Use this method to catch defout and route it through a pager, add extra
