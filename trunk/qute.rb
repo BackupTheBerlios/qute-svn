@@ -413,20 +413,24 @@ class Form < OrderedHash
   end
 
   # post form data to CGI @action on server @host
-  def post(parserclass = nil)
+  def post(parser = nil)
     @targeturl or raise "No target url -- cannot post"
-    resp, dest = nil, nil
+    resp = nil
 
     loop do
 
-      # if a parserclass was passed in, create an instance and set it
+      # if a parser was passed in, set it
       # up as the http.post destination object
-      if parserclass then
-        dest = parserclass.new
+      if parser then
+        # XXX: temporary code to catch clients trying to use the old
+        # API for this method:
+        parser.is_a? Class and raise(
+            "Parameter to From::post must now be an instance of" +
+            " a Parser class instead of the class itself." )
 
         # the new object's sourceurl is our own targeturl
         # this is used for setting the next post's referer
-        dest.sourceurl = targeturl
+        parser.sourceurl = targeturl
       end
 
       # connect to web host unless we already have a matching http object
@@ -452,9 +456,9 @@ class Form < OrderedHash
 #     puts "--------------------\nEnd Query\n--------------------\n"
       if @method == 'get' or querystring == ''
           querystring == '' or path += '?' + querystring
-          resp = @@http.get(path, headers, dest)
+          resp = @@http.get(path, headers, parser)
       else
-          resp = @@http.post(path, querystring, headers, dest)
+          resp = @@http.post(path, querystring, headers, parser)
       end
 
       # 1.6.8 / 1.8.0 compatibility: 
@@ -476,14 +480,14 @@ class Form < OrderedHash
 
     end
 
-    # return value depends on if a parserclass was passed in
-    if parserclass then
+    # return value depends on if a parser was passed in
+    if parser then
       # set the data object generator's cookie
-      dest.cookie = $1 if resp['set-cookie'] =~ /^([^;]*)/
+      parser.cookie = $1 if resp['set-cookie'] =~ /^([^;]*)/
 
       # return the data object created by the parser instance
-      dest.verify
-      return dest.dataobj
+      parser.verify
+      return parser.dataobj
     else
       # return the raw response data from the web server
       return [resp, resp.body]

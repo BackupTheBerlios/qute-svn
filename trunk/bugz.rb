@@ -13,7 +13,7 @@ $QUTEDEBUG = true
 def getmainform
   url = 'http://bugs.gentoo.org/query.cgi?format=advanced'
 
-  queryform = Qute::Form.new(url).post(Qute::FormParser).detect { |form|
+  queryform = Qute::Form.new(url).post(Qute::FormParser.new).detect { |form|
     form['query_format']
   }
 
@@ -49,7 +49,7 @@ end
 
 class BugList
   def initialize( queryform )
-    @bugtable = queryform.post( Qute::TableParser )
+    @bugtable = queryform.post( Qute::TableParser.new )
   end
 
   def each
@@ -64,25 +64,26 @@ class BugList
   end
 end
 
-class DoubleParser
-  include Qute::DataObjGen
-
-  attr_reader :tableparser, :formparser
-
-  def initialize
-    @tableparser = Qute::TableParser.new
-    @formparser = Qute::FormParser.new
+class MultiParser
+  def initialize( *parsers )
+    @parsers = parsers
   end
 
-  def <<(addbuf)
-    @tableparser << addbuf
-    @formparser << addbuf
+  def method_missing( method, *args )
+    @parsers.each do |parser|
+      parser.send( method, *args )
+    end
   end
 end
 
 class BugText
   def initialize( queryform )
-    @bugtext = queryform.post( DoubleParser )
+    table = Qute::TableParser.new
+    form  = Qute::FormParser.new
+    @bugtext = queryform.post( MultiParser.new( table, form ) )
+
+    p form.dataobj
+    p table.dataobj
   end
 
   # XXX this definitely isn't complete
