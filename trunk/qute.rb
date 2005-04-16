@@ -238,6 +238,9 @@ class SGMLParser
   end
 end
 
+# Combination Array and Hash: OrderedHash#[String] accesses as Hash;
+# OrderedHash#[Integer] accesses as Array.  OrderedHash#each will return values
+# in the order they were added, since it's simply falling back to Array#each
 class OrderedHash < Array
   def initialize
     super
@@ -356,6 +359,13 @@ class FormField
   end
 end
 
+# Classes related to forms:
+#       FormField - one field in a form
+#       Form      - one form in a page, handles posting and marshalling
+#       FormList  - list of forms in a page
+# 
+# The Form class represents a list of FormFields (via OrderedHash), along with
+# the methods necessary to post the itself to a CGI.
 class Form < OrderedHash
   attr_accessor :sourceurl, :targeturl, :cookie, :method
   @@http = nil
@@ -505,6 +515,7 @@ class Form < OrderedHash
   end
 end
 
+# The FormList class keeps track of a common sourceurl and cookie for a set of Forms
 class FormList < Array
   attr_reader :sourceurl, :cookie
 
@@ -523,6 +534,9 @@ class FormList < Array
   end
 end
 
+# The TableRow class provides storage for a list of values (columns) for a given
+# row in a Table.  It keeps track of whether the row consists of header or data,
+# and where the row appears in the Table.
 class TableRow < DelegateClass(Array)
 #class TableRow < Array
   attr_accessor :rowtype
@@ -566,6 +580,7 @@ class TableRow < DelegateClass(Array)
   end
 end
 
+# A TableRecord allows access to a record keyed by headers
 class TableRecord
   attr_reader :headers
 
@@ -669,6 +684,13 @@ class TableRecord
   end
 end
 
+# Classes related to table management:
+#       TableRow    - one row of a table
+#       TableRecord - one record, comprising N rows
+#       Table       - entire web page
+#
+# A Table is an array of TableRows.  It keeps track of a sourceurl and cookie
+# for the entire table, plus provides easy access to all the header rows.
 class Table < Array
   attr_accessor :sourceurl, :cookie
 
@@ -694,7 +716,8 @@ class Table < Array
     @record or @record = TableRecord.new(1, allheaders)
   end
 
-  #XXX: could this use or be used by TableRecord#[]?
+  # Iterate through header rows that contain a cell matching one of the given
+  # patterns
   def eachheader(*patternlist)
     allheaders.each do |header|
       catch :skipheader do
@@ -707,6 +730,8 @@ class Table < Array
   end
 end
 
+# TextData is just a String with an associated sourceurl and cookie, similar to 
+# Table and Form
 class TextData < String
   attr_accessor :sourceurl, :cookie
 end
