@@ -44,9 +44,10 @@ VERSIONMSG = "qute version #{%Q$Rev$.gsub(/(^.*: | $)/, '')}"
 # encountered in the input stream.  The input stream is fed to SGMLParser
 # objects via the << method.
 class SGMLParser
-  OPTSRE = %r{
-    ([^\s>=]+) (?:=\s*"([^"]*)" | =\s*'([^']*)' | =\s*([^\s>]*))?
-  }x
+  # Bugzilla long_list.cgi outputs a line with <font ="+3>.
+  # Using OPTVALRE in OPTSRE helps us handle this situation.
+  OPTVALRE = %r{ (?:=\s*"([^"]*)" | =\s*'([^']*)' | =\s*([^\s>]*)) }x
+  OPTSRE = %r{ (?:([^\s>=]+) #{OPTVALRE.source}? | #{OPTVALRE.source}) }x
 
   SGMLRE = %r{
     (\A[^&<]+) |                                # text
