@@ -1,0 +1,760 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head><!-- 1.0@bugzilla.org -->
+
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <link rel="shortcut icon" href="http://bugs.gentoo.org/images/favicon.ico" type="image/x-icon">
+    <link title="new" rel="stylesheet" href="show_bug.cgi_files/main.css" type="text/css">
+    
+    
+
+<title>Bug 77777 - groff fails to build during "bootstrap.sh"</title><link rel="Top" href="http://bugs.gentoo.org/">
+
+  
+    <link rel="Up" href="http://bugs.gentoo.org/buglist.cgi?regetlastlist=1">
+
+
+
+      <link rel="Next" href="http://bugs.gentoo.org/show_bug.cgi?id=44423">
+      <link rel="Last" href="http://bugs.gentoo.org/show_bug.cgi?id=87474">
+
+
+  
+    <link rel="Show" title="Dependency Tree" href="http://bugs.gentoo.org/showdependencytree.cgi?id=77777">
+    <link rel="Show" title="Dependency Graph" href="http://bugs.gentoo.org/showdependencygraph.cgi?id=77777"> 
+
+
+      <link rel="Show" title="Bug Activity" href="http://bugs.gentoo.org/show_activity.cgi?id=77777">
+      <link rel="Show" title="Printer-Friendly Version" href="http://bugs.gentoo.org/long_list.cgi?buglist=77777">
+    
+    
+    <script type="text/javascript">
+  <!--
+  
+  function initHelp() {}
+  // -->
+  </script>        
+
+    
+        <link href="show_bug.cgi_files/edit_bug.css" rel="stylesheet" type="text/css"></head>
+
+
+
+
+
+
+    <body onload="" bgcolor="#ffffff">
+
+
+<a href="http://bugs.gentoo.org/"><img src="show_bug.cgi_files/bugzilla.png" alt="Gentoo Linux Bugzilla" border="0"></a>
+
+<p class="menu">
+<a class="menulink" href="http://www.gentoo.org/index.xml">Home</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/about.xml"> About </a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/contract.xml"> Social Contract</a> |
+<a class="menulink" href="http://www.gentoo.org/doc/en/index.xml">Docs</a> |
+<a class="menulink" href="http://forums.gentoo.org/">Forums</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/lists.xml"> Lists</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/shots.xml">ScreenShots</a> |
+<a class="highlight" href="http://bugs.gentoo.org/">Bugs</a> |
+<a class="menulink" href="http://store.gentoo.org/">Store</a> |
+<a class="menulink" href="http://www.gentoo.org/news/en/gwn/gwn.xml"> GWN</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/where.xml"> Get Gentoo!</a>
+</p>
+
+    <table border="0" cellspacing="0" width="100%">
+      <tbody><tr>
+        <td align="left" valign="top">
+          <table border="0" cellpadding="0" cellspacing="2">
+            <tbody><tr>
+              <td align="left" nowrap="nowrap" valign="top">
+                <font size="+1"><b>Bugzilla Bug 77777 <br> </b><i>groff fails to build during "bootstrap.sh"</i><b></b></font>
+              </td>
+            </tr>
+          </tbody></table>
+        </td>
+        <td align="left" valign="middle">&nbsp;</td>
+        <td align="left" valign="middle"></td>
+          <td align="right" valign="middle">Last modified: 2005-01-13 12:15 PST</td>
+      </tr>
+    </tbody></table>
+<!-- 1.0@bugzilla.org -->
+
+
+  <b>Bug List:</b>
+  
+  <a href="http://bugs.gentoo.org/show_bug.cgi?id=44423">First</a>
+  <a href="http://bugs.gentoo.org/show_bug.cgi?id=87474">Last</a>
+ 
+      (This bug is not in your list)
+  
+  &nbsp;&nbsp;<a href="http://bugs.gentoo.org/buglist.cgi?regetlastlist=1">Show list</a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://bugs.gentoo.org/query.cgi">Query page</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://bugs.gentoo.org/enter_bug.cgi?format=guided">Enter new bug</a>
+
+<hr>
+<!-- 1.0@bugzilla.org -->
+
+<!-- 1.0@bugzilla.org -->
+
+
+<form name="changeform" method="post" action="process_bug.cgi">
+
+  <input name="delta_ts" value="20050113121514" type="hidden">
+  <input name="longdesclength" value="4" type="hidden">
+  <input name="id" value="77777" type="hidden">
+
+
+
+  <table border="0" cellpadding="1" cellspacing="1">
+    <tbody><tr>      
+      <td align="right">
+        <b>Bug#:</b>
+      </td>
+      <td>
+        <a href="http://bugs.gentoo.org/show_bug.cgi?id=77777">77777</a>
+            <label title="a name for the bug that can be used in place of its ID number, f.e. when adding it to a list of dependencies">
+              <b>alias:</b>
+              <input name="alias" value="" size="20" maxlength="20">
+            </label>
+      </td>
+      
+      <td>&nbsp;</td>
+
+      <td align="right">
+        <b><u>H</u>ardware:</b>
+      </td><td>
+    <label for="rep_platform" accesskey="h">
+      <select name="rep_platform" id="rep_platform"><option value="All">All
+          </option><option value="x86" selected="selected">x86
+          </option><option value="PPC">PPC
+          </option><option value="PPC64">PPC64
+          </option><option value="Sparc">Sparc
+          </option><option value="MIPS">MIPS
+          </option><option value="Alpha">Alpha
+          </option><option value="ARM">ARM
+          </option><option value="HPPA">HPPA
+          </option><option value="amd64">amd64
+          </option><option value="ia64">ia64
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+      
+      <td align="right">
+        <b>Reporter:</b>
+      </td>
+      <td>Stan Behrens &lt;stanbehrens@msn.com&gt;
+      </td>    
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b><u>P</u>roduct:</b>
+      </td><td>
+    <label for="product" accesskey="p">
+      <select name="product" id="product"><option value="Admin">Admin
+          </option><option value="Developer Relations">Developer Relations
+          </option><option value="Docs-developer">Docs-developer
+          </option><option value="Docs-user">Docs-user
+          </option><option value="Gentoo BSD">Gentoo BSD
+          </option><option value="Gentoo Bugzilla">Gentoo Bugzilla
+          </option><option value="Gentoo for Mac OS X">Gentoo for Mac OS X
+          </option><option value="Gentoo Hosted Projects">Gentoo Hosted Projects
+          </option><option value="Gentoo Infrastructure">Gentoo Infrastructure
+          </option><option value="Gentoo Linux" selected="selected">Gentoo Linux
+          </option><option value="Gentoo LiveCD (all flavors)">Gentoo LiveCD (all flavors)
+          </option><option value="Gentoo Security">Gentoo Security
+          </option><option value="GRP">GRP
+          </option><option value="Mirrors">Mirrors
+          </option><option value="Portage Development">Portage Development
+          </option><option value="Recruitment">Recruitment
+          </option><option value="Web-www.gentoo.org">Web-www.gentoo.org
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+      
+      <td align="right">
+        <b><u>O</u>S:</b>
+      </td><td>
+    <label for="op_sys" accesskey="o">
+      <select name="op_sys" id="op_sys"><option value="All">All
+          </option><option value="Linux" selected="selected">Linux
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+
+      <td align="right">
+        <b><u>A</u>dd&nbsp;CC:</b>
+      </td>
+      <td>
+        <input name="newcc" size="30" value="" accesskey="a">
+      </td>
+    </tr>
+
+    
+
+    <tr>
+      <td align="right">
+        <b>
+          <a href="http://bugs.gentoo.org/describecomponents.cgi?product=Gentoo%20Linux">
+            Co<u>m</u>ponent</a>:
+        </b>
+      </td><td>
+    <label for="component" accesskey="m">
+      <select name="component" id="component"><option value="Applications" selected="selected">Applications
+          </option><option value="baselayout">baselayout
+          </option><option value="Core system">Core system
+          </option><option value="Development">Development
+          </option><option value="Ebuilds">Ebuilds
+          </option><option value="Eclasses and Profiles">Eclasses and Profiles
+          </option><option value="Games">Games
+          </option><option value="GCC Porting">GCC Porting
+          </option><option value="GLI">GLI
+          </option><option value="GNOME">GNOME
+          </option><option value="Hardened">Hardened
+          </option><option value="KDE">KDE
+          </option><option value="Library">Library
+          </option><option value="Printing">Printing
+          </option><option value="Security">Security
+          </option><option value="Server">Server
+          </option><option value="Unspecified">Unspecified
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+ 
+      <td align="right">
+        <b><u>V</u>ersion:</b>
+      </td><td>
+    <label for="version" accesskey="v">
+      <select name="version" id="version"><option value="1.0">1.0
+          </option><option value="1.0 RC6 r14">1.0 RC6 r14
+          </option><option value="1.1a">1.1a
+          </option><option value="1.2">1.2
+          </option><option value="1.3">1.3
+          </option><option value="1.4">1.4
+          </option><option value="1.4_rc1">1.4_rc1
+          </option><option value="1.4_rc2">1.4_rc2
+          </option><option value="1.4_rc3">1.4_rc3
+          </option><option value="1.4_rc4">1.4_rc4
+          </option><option value="2004.0">2004.0
+          </option><option value="2004.1">2004.1
+          </option><option value="2004.2">2004.2
+          </option><option value="2004.3">2004.3
+          </option><option value="2005.0">2005.0
+          </option><option value="unspecified" selected="selected">unspecified
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+      
+      <td rowspan="4" align="right" valign="top">
+        <b>CC:</b>
+      </td>
+      <td rowspan="4" valign="top"> 
+        <input name="cc" value="" type="hidden">
+      </td>
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>
+          <a href="http://bugs.gentoo.org/bug_status.html">Status</a>:
+        </b>
+      </td>
+      <td>RESOLVED</td>      
+      <td>&nbsp;</td>
+      
+      <td align="right">
+        <b><a href="http://bugs.gentoo.org/bug_status.html#priority">Pr<u>i</u>ority</a>:</b>
+      </td><td>
+    <label for="priority" accesskey="i">
+      <select name="priority" id="priority"><option value="P1">P1
+          </option><option value="P2" selected="selected">P2
+          </option><option value="P3">P3
+          </option><option value="P4">P4
+          </option><option value="P5">P5
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>
+          <a href="http://bugs.gentoo.org/bug_status.html">Resolution</a>:
+        </b>
+      </td>
+      <td>DUPLICATE</td>      
+      <td>&nbsp;</td>
+      
+      <td align="right">
+        <b><a href="http://bugs.gentoo.org/bug_status.html#severity">S<u>e</u>verity</a>:</b>
+      </td><td>
+    <label for="bug_severity" accesskey="e">
+      <select name="bug_severity" id="bug_severity"><option value="blocker" selected="selected">blocker
+          </option><option value="critical">critical
+          </option><option value="major">major
+          </option><option value="normal">normal
+          </option><option value="minor">minor
+          </option><option value="trivial">trivial
+          </option><option value="enhancement">enhancement
+          </option></select>
+    </label>
+  </td>
+  <td>&nbsp;</td>
+      
+    </tr>
+    
+    <tr>
+      <td align="right">
+        <b>
+          <a href="http://bugs.gentoo.org/bug_status.html#assigned_to">Assigned&nbsp;To</a>:
+        </b>
+      </td>
+      <td>Gentoo Linux bug wranglers &lt;bug-wranglers@gentoo.org&gt;</td>
+      <td>&nbsp;</td>
+ 
+        <td colspan="3">&nbsp;</td>
+    </tr>
+
+
+
+
+  <tr>
+    <td align="right">
+      <b>
+          <u>U</u>RL:
+      </b>
+    </td>
+    <td colspan="5">
+      <input name="bug_file_loc" accesskey="u" value="" size="60">
+    </td>
+    <td rowspan="4" colspan="2" valign="top"> 
+    </td>
+  </tr>
+  
+  <tr>
+    <td align="right">
+      <b><u>S</u>ummary:</b>
+    </td>
+    <td colspan="5">
+      <input name="short_desc" accesskey="s" value="groff fails to build during &quot;bootstrap.sh&quot;" size="60">
+    </td>
+  </tr>
+ 
+    <tr>
+      <td align="right">
+        <b>Status <u>W</u>hiteboard:</b>
+      </td>
+      <td colspan="5">
+        <input name="status_whiteboard" accesskey="w" value="" size="60">
+      </td>
+    </tr>
+
+    <tr>
+      <td align="right">
+        <b>
+          <a href="http://bugs.gentoo.org/describekeywords.cgi"><u>K</u>eywords</a>:
+        </b>
+      </td><td colspan="5">
+        <input name="keywords" accesskey="k" value="" size="60">
+      </td>
+    </tr> 
+  </tbody></table>
+
+  
+
+<!-- 1.0@bugzilla.org -->
+
+
+<br>
+<table border="1" cellpadding="4" cellspacing="0">
+  <tbody><tr>
+    <th align="left" bgcolor="#cccccc">Attachment</th>
+    <th align="left" bgcolor="#cccccc">Type</th>
+    <th align="left" bgcolor="#cccccc">Created</th>
+    <th align="left" bgcolor="#cccccc">Actions</th>
+  </tr>
+
+  <tr>
+    <td colspan="3">
+      <a href="http://bugs.gentoo.org/attachment.cgi?bugid=77777&amp;action=enter">Create a New Attachment</a> (proposed patch, testcase, etc.)
+    </td>
+    <td colspan="1">
+      <a href="http://bugs.gentoo.org/attachment.cgi?bugid=77777&amp;action=viewall">View All</a>
+    </td>
+  </tr>
+</tbody></table>
+<br>
+
+
+
+  <table>
+    <tbody><tr><th align="right">Bug 77777 <u>d</u>epends on:</th>
+  <td>
+  </td>
+  <td>
+    <input name="dependson" accesskey="d" value="">
+  </td>
+      <td rowspan="2">
+        <a href="http://bugs.gentoo.org/showdependencytree.cgi?id=77777">Show 
+        dependency tree</a>  
+
+      </td>
+    </tr>
+
+    <tr><th align="right">Bug 77777 <u>b</u>locks:</th>
+  <td>
+  </td>
+  <td>
+    <input name="blocked" accesskey="b" value="">
+  </td>
+    </tr>
+  </tbody></table>
+
+
+
+
+  <br>
+  <b>Additional <u>C</u>omments:</b>
+  <br>
+  <textarea name="comment" rows="10" cols="80" accesskey="c"></textarea>
+  <br>
+
+
+
+
+  <br>
+  <input name="knob" value="none" checked="checked" type="radio">
+  Leave as <b>RESOLVED&nbsp;DUPLICATE</b>
+  <br>
+
+
+  
+        <input name="knob" value="reopen" type="radio"> Reopen bug
+        <br>
+        <input name="knob" value="verify" type="radio">
+        Mark bug as <b>VERIFIED</b><br>
+        <input name="knob" value="close" type="radio">
+        Mark bug as <b>CLOSED</b><br>  
+  
+  <input value="Commit" type="submit">
+  <input name="form_name" value="process_bug" type="hidden">
+  <p>
+    <font size="+1">
+      <b>
+        <a href="http://bugs.gentoo.org/show_activity.cgi?id=77777">View Bug Activity</a>
+        &nbsp; | &nbsp;
+        <a href="http://bugs.gentoo.org/long_list.cgi?buglist=77777">Format For Printing</a>
+      </b>
+    </font>
+
+  </p>  
+
+
+
+<table>
+  <tbody><tr>
+    <td align="left">
+      <b>
+        <a name="c0" href="#c0">Description</a>:
+      </b>
+    </td>
+    <td align="right" width="100%">
+      Opened: 2005-01-12 21:54 PST
+    </td>
+  </tr>
+</tbody></table>
+<hr>
+<!-- 1.0@bugzilla.org -->
+
+<div>
+        
+
+<pre># cd /usr/portage; ./scripts/bootstrap.sh
+ [...]
+&gt;&gt;&gt; sys-devel/m4-1.4.1 merged.
+&gt;&gt;&gt; emerge (2 of 18) sys-apps/groff-1.19.1-r2 to /
+&gt;&gt;&gt; md5 src_uri ;-) groff-1.19.1.tar.gz
+&gt;&gt;&gt; Unpacking source...
+&gt;&gt;&gt; Unpacking groff-1.19.1.tar.gz to /var/tmp/portage/groff-1.19.1-r2/work
+ * Applying groff-1.18-infoext.patch ...                                  [ ok ]
+ * Applying groff-1.18-no-netpbm-depend.patch ...                         [ ok ]
+ * Applying groff-man-UTF-8.diff ...                                      [ ok ]
+ * Applying groff-1.19.1-stack.patch ...                                  [ ok ]
+ * Applying groff-1.19.1-tmpfile.patch ...                                [ ok ]
+ * Applying groff-1.19.1-parallel-make.patch ...                          [ ok ]
+&gt;&gt;&gt; Source unpacked.
+gcc
+g++
+configure: WARNING: If you wanted to set the --build type, don't use --host.
+    If a cross compiler is detected then cross compile mode will be used.
+checking for i686-pc-linux-gnu-gcc... gcc
+checking for C compiler default output file name... a.out
+checking whether the C compiler works... yes
+checking whether we are cross compiling... no
+checking for suffix of executables... 
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ANSI C... none needed
+checking for i686-pc-linux-gnu-g++... g++
+checking whether we are using the GNU C++ compiler... no
+checking whether g++ accepts -g... no
+checking that C++ compiler can compile simple program... no
+configure: error: a working C++ compiler is required
+
+!!! ERROR: sys-apps/groff-1.19.1-r2 failed.
+!!! Function src_compile, Line 85, Exitcode 1
+!!! (no error message)
+!!! If you need support, post the topmost build error, NOT this status message.
+
+=======================
+make.conf:
+-----------------------
+# grep -v ^# /etc/make.conf
+USE="-* x86"
+CHOST="i686-pc-linux-gnu"
+CFLAGS="-march=pentium4 -O3 -fomit-frame-pointer -pipe"
+CXXFLAGS="${CFLAGS}"
+ACCEPT_KEYWORDS="x86"
+GENTOO_MIRRORS="<a href="http://ftp.uni-erlangen.de/pub/mirrors/gentoo">http://ftp.uni-erlangen.de/pub/mirrors/gentoo</a>"
+SYNC="rsync://rsync.de.gentoo.org/gentoo-portage"
+MAKEOPTS="-j2"
+PORTAGE_NICENESS=3
+
+=======================
+config.log:
+-----------------------
+ [...]
+configure:2243: checking for i686-pc-linux-gnu-g++
+configure:2269: result: g++
+configure:2327: checking for C++ compiler version
+configure:2330: g++ --version &lt;/dev/null &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2333: $? = 127
+configure:2335: g++ -v &lt;/dev/null &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2338: $? = 127
+configure:2340: g++ -V &lt;/dev/null &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2343: $? = 127
+configure:2346: checking whether we are using the GNU C++ compiler
+configure:2370: g++ -c -march=pentium4 -O3 -fomit-frame-pointer -pipe  conftest.cc &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2376: $? = 127
+configure: failed program was:
+| /* confdefs.h.  */
+| 
+| #define PACKAGE_NAME ""
+| #define PACKAGE_TARNAME ""
+| #define PACKAGE_VERSION ""
+| #define PACKAGE_STRING ""
+| #define PACKAGE_BUGREPORT ""
+| /* end confdefs.h.  */
+| 
+| int
+| main ()
+| {
+| #ifndef __GNUC__
+|        choke me
+| #endif
+| 
+|   ;
+|   return 0;
+| }
+configure:2402: result: no
+ [...]
+
+=======================
+environment:
+-----------------------
+# printenv 
+INFODIR=/usr/share/info
+MANPATH=/usr/share/man:/usr/local/share/man:/usr/share/gcc-data/i386-pc-linux-gnu/3.3/man
+HOSTNAME=rescue
+SHELL=/bin/bash
+TERM=xterm
+SSH_CLIENT=212.202.12.236 56408 22
+SSH_TTY=/dev/pts/0
+USER=root
+PAGER=/usr/bin/less
+CONFIG_PROTECT_MASK=/etc/terminfo
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/opt/bin:/usr/i386-pc-linux-gnu/gcc-bin/3.3
+MAIL=/var/mail/root
+GLIBC_SSP_CHECKED=1
+PWD=/usr/portage
+INPUTRC=/etc/inputrc
+EDITOR=/bin/nano
+PS1=\[\033[01;31m\]\h \[\033[01;34m\]\W \$ \[\033[00m\]
+CXX=g++
+HOME=/root
+SHLVL=2
+LOGNAME=root
+LESS=-R
+CVS_RSH=ssh
+SSH_CONNECTION=212.202.12.236 56408 82.96.68.77 22
+LESSOPEN=|lesspipe.sh %s
+INFOPATH=/usr/share/info:/usr/share/gcc-data/i386-pc-linux-gnu/3.3/info
+CC=gcc
+_=/bin/printenv
+OLDPWD=/
+
+=======================
+emerge --info:
+-----------------------
+# emerge --info
+Portage 2.0.51-r3 (default-linux/x86/2004.3, gcc-3.3.4, unavailable, 2.6.9-gentoo-r13 i686)
+=================================================================
+System uname: 2.6.9-gentoo-r13 i686 Intel(R) Pentium(R) 4 CPU 2.40GHz
+Gentoo Base System version 1.4.16
+Autoconf: 
+Automake: 
+Binutils: sys-devel/binutils-2.14.90.0.8-r1
+Headers:  
+Libtools: 
+ACCEPT_KEYWORDS="x86"
+AUTOCLEAN="yes"
+CFLAGS="-march=pentium4 -O3 -fomit-frame-pointer -pipe"
+CHOST="i686-pc-linux-gnu"
+COMPILER=""
+CONFIG_PROTECT="/etc /usr/kde/2/share/config /usr/kde/3/share/config /usr/share/config /var/qmail/control"
+CONFIG_PROTECT_MASK="/etc/gconf /etc/terminfo /etc/env.d"
+CXXFLAGS="-march=pentium4 -O3 -fomit-frame-pointer -pipe"
+DISTDIR="/usr/portage/distfiles"
+FEATURES="autoaddcvs autoconfig ccache distlocks sandbox sfperms"
+GENTOO_MIRRORS="<a href="http://ftp.uni-erlangen.de/pub/mirrors/gentoo">http://ftp.uni-erlangen.de/pub/mirrors/gentoo</a>"
+MAKEOPTS="-j2"
+PKGDIR="/usr/portage/packages"
+PORTAGE_TMPDIR="/var/tmp"
+PORTDIR="/usr/portage"
+PORTDIR_OVERLAY=""
+SYNC="rsync://rsync.de.gentoo.org/gentoo-portage"
+USE="x86"
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. follow <a href="http://www.gentoo.org/doc/en/handbook/handbook-x86.xml">http://www.gentoo.org/doc/en/handbook/handbook-x86.xml</a></pre>
+</div>
+  <div>
+        <br>
+        <i>------- Additional Comment
+        <a name="c1" href="#c1">#1</a> From 
+        <a href="mailto:douglas.hoffman@gmail.com">Douglas R. Hoffman</a>
+        2005-01-13 11:42 PST 
+        -------
+        </i>
+        
+
+<pre>I believe this a duplicate of :
+<a href="http://bugs.gentoo.org/show_bug.cgi?id=77718">http://bugs.gentoo.org/show_bug.cgi?id=77718</a></pre>
+</div>
+  <div>
+        <br>
+        <i>------- Additional Comment
+        <a name="c2" href="#c2">#2</a> From 
+        <a href="mailto:bss03@volumehost.com">Boyd Stephen Smith Jr.</a>
+        2005-01-13 11:55 PST 
+        -------
+        </i>
+        
+
+<pre>I agree, looks very much like 77718.</pre>
+</div>
+  <div>
+        <br>
+        <i>------- Additional Comment
+        <a name="c3" href="#c3">#3</a> From 
+        <a href="mailto:swift@gentoo.org">Sven Vermeulen</a>
+        2005-01-13 12:15 PST 
+        -------
+        </i>
+        
+
+<pre>
+*** This bug has been marked as a duplicate of <span class="bz_closed"><a href="http://bugs.gentoo.org/show_bug.cgi?id=77718" title="RESOLVED FIXED - Missing g++ program when bootstraping">77718</a></span> ***</pre>
+</div>
+  
+<!-- 1.0@bugzilla.org -->
+  
+</form>
+
+<hr>
+<!-- 1.0@bugzilla.org -->
+
+
+  <b>Bug List:</b>
+  
+  <a href="http://bugs.gentoo.org/show_bug.cgi?id=44423">First</a>
+  <a href="http://bugs.gentoo.org/show_bug.cgi?id=87474">Last</a>
+ 
+      (This bug is not in your list)
+  
+  &nbsp;&nbsp;<a href="http://bugs.gentoo.org/buglist.cgi?regetlastlist=1">Show list</a>
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://bugs.gentoo.org/query.cgi">Query page</a>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<a href="http://bugs.gentoo.org/enter_bug.cgi?format=guided">Enter new bug</a>
+
+<br>
+<table border="0">
+  <tbody><tr>
+    <td bgcolor="#000000" valign="top">
+      <table bgcolor="#dddaec" border="0" cellpadding="10" cellspacing="0" width="100%">
+        <tbody><tr>
+          <td>
+          
+
+
+	<p class="version"><a href="http://www.bugzilla.org/">Bugzilla</a> Version 2.18rc2</p>
+
+	<p>For more information on Gentoo Linux, please visit our 
+	<a href="http://www.gentoo.org/">homepage</a>.
+	</p>
+
+
+<form method="get" action="show_bug.cgi">
+  <table width="100%">
+    <tbody><tr>
+      <td>
+        Actions:
+      </td>
+      
+      <td nowrap="nowrap" valign="middle">
+        <a href="http://bugs.gentoo.org/enter_bug.cgi?format=guided">New</a> |
+        <a href="http://bugs.gentoo.org/enter_bug.cgi">New-Expert</a> | 
+        <a href="http://bugs.gentoo.org/query.cgi">Query</a> |
+        
+        <input value="Find" type="submit"> bug # 
+        <input name="id" size="6"> | 
+        
+        <a href="http://bugs.gentoo.org/report.cgi">Reports</a> 
+        
+          | <a href="http://bugs.gentoo.org/request.cgi">Requests</a>
+              
+      </td>
+
+      <td>&nbsp;</td>
+          
+      <td align="right" valign="middle">
+          <a href="http://bugs.gentoo.org/createaccount.cgi">New&nbsp;Account</a> | 
+        <a href="http://bugs.gentoo.org/query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+      </td>
+    </tr>
+    
+  </tbody></table>                
+</form>
+
+          </td>
+        </tr>
+      </tbody></table>
+    </td>
+  </tr>
+</tbody></table>
+
+</body></html>

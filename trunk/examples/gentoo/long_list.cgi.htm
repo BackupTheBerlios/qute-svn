@@ -1,0 +1,407 @@
+<!-- 1.0@bugzilla.org -->
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+
+<html>
+    <head>
+
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+    <link REL="shortcut icon" HREF="/images/favicon.ico" TYPE="image/x-icon">
+    <link title="new" rel="stylesheet" href="/css/main.css" type="text/css">
+    <title>Full Text Bug Listing</title>
+    
+
+<link rel="Top" href="http://bugs.gentoo.org/">
+    
+    
+    <script type="text/javascript">
+  <!--
+  
+  function initHelp() {}
+  // -->
+  </script>        
+
+    
+        <link href="css/show_multiple.css" rel="stylesheet" type="text/css">
+  
+  </head>
+  
+
+
+  <body bgcolor="#ffffff" onload="">
+
+
+<a href="/"><img border="0" src="images/bugzilla.png" alt="Gentoo Linux Bugzilla"></a>
+
+<p class="menu">
+<a class="menulink" href="http://www.gentoo.org/index.xml">Home</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/about.xml"> About </a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/contract.xml"> Social Contract</a> |
+<a class="menulink" href="http://www.gentoo.org/doc/en/index.xml">Docs</a> |
+<a class="menulink" href="http://forums.gentoo.org">Forums</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/lists.xml"> Lists</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/shots.xml">ScreenShots</a> |
+<a class="highlight" href="/">Bugs</a> |
+<a class="menulink" href="http://store.gentoo.org">Store</a> |
+<a class="menulink" href="http://www.gentoo.org/news/en/gwn/gwn.xml"> GWN</a> |
+<a class="menulink" href="http://www.gentoo.org/main/en/where.xml"> Get Gentoo!</a>
+</p><!-- 1.0@bugzilla.org --><img alt="" src="1x1.gif" width="1" height="80" align="left">
+  <div align="center">
+    <b>
+      <font ="+3">Bug 77777 - groff fails to build during &quot;bootstrap.sh&quot;</font>
+    </b>
+  </div>
+
+  <table width="100%">
+    <tr>
+      <td>
+        <b>Bug#:</b>
+        <a href="show_bug.cgi?id=77777">77777</a>
+      </td><td>
+    <b>Product:</b>&nbsp;Gentoo Linux
+  </td><td>
+    <b>Version:</b>&nbsp;unspecified
+  </td><td>
+    <b>Platform:</b>&nbsp;x86
+  </td>
+    </tr>
+    
+    <tr><td>
+    <b>OS/Version:</b>&nbsp;Linux
+  </td><td>
+    <b>Status:</b>&nbsp;RESOLVED
+  </td><td>
+    <b>Severity:</b>&nbsp;blocker
+  </td><td>
+    <b>Priority:</b>&nbsp;P2
+  </td>
+    </tr>
+    
+    <tr><td>
+    <b>Resolution:</b>&nbsp;DUPLICATE
+  </td><td>
+    <b>Assigned To:</b>&nbsp;bug-wranglers&#64;gentoo.org
+  </td><td>
+    <b>Reported By:</b>&nbsp;stanbehrens&#64;msn.com
+  </td>
+    </tr>
+    
+    <tr>
+      <td colspan="2">
+        <b>Component:</b>&nbsp;Applications
+      </td>
+    
+      <td colspan="2">
+      </td>
+    </tr>
+    
+    <tr>
+      <td colspan="4">
+        <b>URL:</b>&nbsp;
+        <a href=""></a> 
+    </tr>
+    
+    <tr>
+      <td colspan="4">
+        <b>Summary:</b>&nbsp;groff fails to build during &quot;bootstrap.sh&quot;
+      </td>
+    </tr>
+     
+      <tr>
+        <td colspan="4">
+          <b>Keywords: </b>&nbsp;
+        </td>
+      </tr>
+
+      <tr>
+        <td colspan="4">
+          <b>Status Whiteboard:</b>&nbsp;
+        </td>
+      </tr>
+
+
+    <tr>
+      <td colspan="4">
+        <b>Opened:</b>&nbsp;2005-01-12 21:54 PST
+      </td>
+    </tr>
+    <tr>
+      <td colspan="4">
+        <b>Description:</b>
+      </td>
+    </tr>
+  </table>
+<!-- 1.0@bugzilla.org -->
+
+<div >
+        
+
+<pre># cd /usr/portage; ./scripts/bootstrap.sh
+ [...]
+&gt;&gt;&gt; sys-devel/m4-1.4.1 merged.
+&gt;&gt;&gt; emerge (2 of 18) sys-apps/groff-1.19.1-r2 to /
+&gt;&gt;&gt; md5 src_uri ;-) groff-1.19.1.tar.gz
+&gt;&gt;&gt; Unpacking source...
+&gt;&gt;&gt; Unpacking groff-1.19.1.tar.gz to /var/tmp/portage/groff-1.19.1-r2/work
+ * Applying groff-1.18-infoext.patch ...                                  [ ok ]
+ * Applying groff-1.18-no-netpbm-depend.patch ...                         [ ok ]
+ * Applying groff-man-UTF-8.diff ...                                      [ ok ]
+ * Applying groff-1.19.1-stack.patch ...                                  [ ok ]
+ * Applying groff-1.19.1-tmpfile.patch ...                                [ ok ]
+ * Applying groff-1.19.1-parallel-make.patch ...                          [ ok ]
+&gt;&gt;&gt; Source unpacked.
+gcc
+g++
+configure: WARNING: If you wanted to set the --build type, don't use --host.
+    If a cross compiler is detected then cross compile mode will be used.
+checking for i686-pc-linux-gnu-gcc... gcc
+checking for C compiler default output file name... a.out
+checking whether the C compiler works... yes
+checking whether we are cross compiling... no
+checking for suffix of executables... 
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ANSI C... none needed
+checking for i686-pc-linux-gnu-g++... g++
+checking whether we are using the GNU C++ compiler... no
+checking whether g++ accepts -g... no
+checking that C++ compiler can compile simple program... no
+configure: error: a working C++ compiler is required
+
+!!! ERROR: sys-apps/groff-1.19.1-r2 failed.
+!!! Function src_compile, Line 85, Exitcode 1
+!!! (no error message)
+!!! If you need support, post the topmost build error, NOT this status message.
+
+=======================
+make.conf:
+-----------------------
+# grep -v ^# /etc/make.conf
+USE=&quot;-* x86&quot;
+CHOST=&quot;i686-pc-linux-gnu&quot;
+CFLAGS=&quot;-march=pentium4 -O3 -fomit-frame-pointer -pipe&quot;
+CXXFLAGS=&quot;${CFLAGS}&quot;
+ACCEPT_KEYWORDS=&quot;x86&quot;
+GENTOO_MIRRORS=&quot;<a href="http://ftp.uni-erlangen.de/pub/mirrors/gentoo">http://ftp.uni-erlangen.de/pub/mirrors/gentoo</a>&quot;
+SYNC=&quot;rsync://rsync.de.gentoo.org/gentoo-portage&quot;
+MAKEOPTS=&quot;-j2&quot;
+PORTAGE_NICENESS=3
+
+=======================
+config.log:
+-----------------------
+ [...]
+configure:2243: checking for i686-pc-linux-gnu-g++
+configure:2269: result: g++
+configure:2327: checking for C++ compiler version
+configure:2330: g++ --version &lt;/dev/null &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2333: $? = 127
+configure:2335: g++ -v &lt;/dev/null &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2338: $? = 127
+configure:2340: g++ -V &lt;/dev/null &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2343: $? = 127
+configure:2346: checking whether we are using the GNU C++ compiler
+configure:2370: g++ -c -march=pentium4 -O3 -fomit-frame-pointer -pipe  conftest.cc &gt;&amp;5
+./configure: line 1: g++: command not found
+configure:2376: $? = 127
+configure: failed program was:
+| /* confdefs.h.  */
+| 
+| #define PACKAGE_NAME &quot;&quot;
+| #define PACKAGE_TARNAME &quot;&quot;
+| #define PACKAGE_VERSION &quot;&quot;
+| #define PACKAGE_STRING &quot;&quot;
+| #define PACKAGE_BUGREPORT &quot;&quot;
+| /* end confdefs.h.  */
+| 
+| int
+| main ()
+| {
+| #ifndef __GNUC__
+|        choke me
+| #endif
+| 
+|   ;
+|   return 0;
+| }
+configure:2402: result: no
+ [...]
+
+=======================
+environment:
+-----------------------
+# printenv 
+INFODIR=/usr/share/info
+MANPATH=/usr/share/man:/usr/local/share/man:/usr/share/gcc-data/i386-pc-linux-gnu/3.3/man
+HOSTNAME=rescue
+SHELL=/bin/bash
+TERM=xterm
+SSH_CLIENT=212.202.12.236 56408 22
+SSH_TTY=/dev/pts/0
+USER=root
+PAGER=/usr/bin/less
+CONFIG_PROTECT_MASK=/etc/terminfo
+PATH=/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/opt/bin:/usr/i386-pc-linux-gnu/gcc-bin/3.3
+MAIL=/var/mail/root
+GLIBC_SSP_CHECKED=1
+PWD=/usr/portage
+INPUTRC=/etc/inputrc
+EDITOR=/bin/nano
+PS1=\[\033[01;31m\]\h \[\033[01;34m\]\W \$ \[\033[00m\]
+CXX=g++
+HOME=/root
+SHLVL=2
+LOGNAME=root
+LESS=-R
+CVS_RSH=ssh
+SSH_CONNECTION=212.202.12.236 56408 82.96.68.77 22
+LESSOPEN=|lesspipe.sh %s
+INFOPATH=/usr/share/info:/usr/share/gcc-data/i386-pc-linux-gnu/3.3/info
+CC=gcc
+_=/bin/printenv
+OLDPWD=/
+
+=======================
+emerge --info:
+-----------------------
+# emerge --info
+Portage 2.0.51-r3 (default-linux/x86/2004.3, gcc-3.3.4, unavailable, 2.6.9-gentoo-r13 i686)
+=================================================================
+System uname: 2.6.9-gentoo-r13 i686 Intel(R) Pentium(R) 4 CPU 2.40GHz
+Gentoo Base System version 1.4.16
+Autoconf: 
+Automake: 
+Binutils: sys-devel/binutils-2.14.90.0.8-r1
+Headers:  
+Libtools: 
+ACCEPT_KEYWORDS=&quot;x86&quot;
+AUTOCLEAN=&quot;yes&quot;
+CFLAGS=&quot;-march=pentium4 -O3 -fomit-frame-pointer -pipe&quot;
+CHOST=&quot;i686-pc-linux-gnu&quot;
+COMPILER=&quot;&quot;
+CONFIG_PROTECT=&quot;/etc /usr/kde/2/share/config /usr/kde/3/share/config /usr/share/config /var/qmail/control&quot;
+CONFIG_PROTECT_MASK=&quot;/etc/gconf /etc/terminfo /etc/env.d&quot;
+CXXFLAGS=&quot;-march=pentium4 -O3 -fomit-frame-pointer -pipe&quot;
+DISTDIR=&quot;/usr/portage/distfiles&quot;
+FEATURES=&quot;autoaddcvs autoconfig ccache distlocks sandbox sfperms&quot;
+GENTOO_MIRRORS=&quot;<a href="http://ftp.uni-erlangen.de/pub/mirrors/gentoo">http://ftp.uni-erlangen.de/pub/mirrors/gentoo</a>&quot;
+MAKEOPTS=&quot;-j2&quot;
+PKGDIR=&quot;/usr/portage/packages&quot;
+PORTAGE_TMPDIR=&quot;/var/tmp&quot;
+PORTDIR=&quot;/usr/portage&quot;
+PORTDIR_OVERLAY=&quot;&quot;
+SYNC=&quot;rsync://rsync.de.gentoo.org/gentoo-portage&quot;
+USE=&quot;x86&quot;
+
+
+Reproducible: Always
+Steps to Reproduce:
+1. follow <a href="http://www.gentoo.org/doc/en/handbook/handbook-x86.xml">http://www.gentoo.org/doc/en/handbook/handbook-x86.xml</a></pre>
+</div>
+  <div >
+        <br>
+        <i>------- Additional Comment
+        <a name="c1" href="#c1">#1</a> From 
+        <a href="mailto:douglas.hoffman&#64;gmail.com">Douglas R. Hoffman</a>
+        2005-01-13 11:42 PST 
+        -------
+        </i>
+        
+
+<pre>
+I believe this a duplicate of :
+<a href="http://bugs.gentoo.org/show_bug.cgi?id=77718">http://bugs.gentoo.org/show_bug.cgi?id=77718</a></pre>
+</div>
+  <div >
+        <br>
+        <i>------- Additional Comment
+        <a name="c2" href="#c2">#2</a> From 
+        <a href="mailto:bss03&#64;volumehost.com">Boyd Stephen Smith Jr.</a>
+        2005-01-13 11:55 PST 
+        -------
+        </i>
+        
+
+<pre>I agree, looks very much like 77718.</pre>
+</div>
+  <div >
+        <br>
+        <i>------- Additional Comment
+        <a name="c3" href="#c3">#3</a> From 
+        <a href="mailto:swift&#64;gentoo.org">Sven Vermeulen</a>
+        2005-01-13 12:15 PST 
+        -------
+        </i>
+        
+
+<pre>
+
+*** This bug has been marked as a duplicate of <span class="bz_closed"><a href="show_bug.cgi?id=77718" title="RESOLVED FIXED - Missing g++ program when bootstraping">77718</a></span> ***</pre>
+</div>
+  
+<!-- 1.0@bugzilla.org -->
+  
+  <hr>
+
+<table border="0">
+  <tr>
+    <td bgcolor="#000000" valign="top">
+      <table border="0" cellpadding="10" cellspacing="0" width="100%"
+             bgcolor="dddaec">
+        <tr>
+          <td>
+          
+
+
+	<p class="version"><a href="http://www.bugzilla.org/">Bugzilla</a> Version 2.18rc2</p>
+
+	<p>For more information on Gentoo Linux, please visit our 
+	<a href="http://www.gentoo.org">homepage</a>.
+	</p>
+
+
+<form method="get" action="show_bug.cgi">
+  <table width="100%">
+    <tr>
+      <td>
+        Actions:
+      </td>
+      
+      <td valign="middle" nowrap="nowrap">
+        <a href="enter_bug.cgi?format=guided">New</a> |
+        <a href="enter_bug.cgi">New-Expert</a> | 
+        <a href="query.cgi">Query</a> |
+        
+        <input type="submit" value="Find"> bug # 
+        <input name="id" size="6"> | 
+        
+        <a href="report.cgi">Reports</a> 
+        
+          | <a href="request.cgi">Requests</a>
+              
+      </td>
+
+      <td>&nbsp;</td>
+          
+      <td valign="middle" align="right">
+          <a href="createaccount.cgi">New&nbsp;Account</a> | 
+        <a href="query.cgi?GoAheadAndLogIn=1">Log&nbsp;In</a>
+      </td>
+    </tr>
+    
+  </table>                
+</form>
+
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>
+
+</body>
+</html>
