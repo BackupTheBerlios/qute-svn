@@ -361,14 +361,30 @@ class FormField
 end
 
 # Classes related to forms:
-#       FormField - one field in a form
-#       Form      - one form in a page, handles posting and marshalling
-#       FormList  - list of forms in a page
+# FormField:: one field in a form
+# Form::      one form in a page, handles posting and marshalling
+# FormList::  list of forms in a page
 # 
 # The Form class represents a list of FormFields (via OrderedHash), along with
-# the methods necessary to post the itself to a CGI.
+# the methods necessary to post itself to a CGI.
 class Form < OrderedHash
-  attr_accessor :sourceurl, :targeturl, :cookie, :method
+  # used in the Referer: header when posting the Form.  The initial Form
+  # generally does not have sourceurl set.  Parsed forms inherit their sourceurl
+  # from the parent's targeturl.
+  attr_accessor :sourceurl
+
+  # specifies the target for posting the Form.  For the initial Form, the
+  # targeturl specifies where the form can be fetched (for example
+  # http://bugs.gentoo.org/query.cgi)
+  attr_accessor :targeturl
+
+  # set by the set-cookie header when parsing, then posted back by any child
+  # Forms
+  attr_accessor :cookie
+  
+  # 'get' or 'post', defaults to the method of the parent form or 'get'
+  attr_accessor :method
+
   @@http = nil
 
   def initialize(targeturl = nil, prevobj = nil)
@@ -387,7 +403,7 @@ class Form < OrderedHash
 
   # convert self into a URL-escaped string for posting
   def querystring
-    map { |field| field.to_s }.join('&')
+    self.map { |field| field.to_s }.join('&')
   end
 
   # parse a URL-escaped string and load the resulting values
@@ -686,9 +702,9 @@ class TableRecord
 end
 
 # Classes related to table management:
-#       TableRow    - one row of a table
-#       TableRecord - one record, comprising N rows
-#       Table       - entire web page
+# TableRow::    one row of a table
+# TableRecord:: one record, comprising N rows
+# Table::       entire web page
 #
 # A Table is an array of TableRows.  It keeps track of a sourceurl and cookie
 # for the entire table, plus provides easy access to all the header rows.
