@@ -709,12 +709,12 @@ end
 # including the Not, Match (aka exact), and Case checkboxes, as well as simple
 # aliases.
 class OptsFormFields
-  def initialize(queryform)
-    @queryform = queryform
-  end
+  attr_accessor :fieldalias
+  private :fieldalias
 
-  def fieldalias
-    { }
+  def initialize(queryform)
+    @fieldalias = {}
+    @queryform = queryform
   end
 
   def validopts(cmdobj)
@@ -785,7 +785,7 @@ class QuteCmdObj
   # usually the first argument, such as "read", "query", "update", etc.
   attr_reader :command
   
-  # hash of option/argument pairs from the cmdline
+  # hash of option/argument pairs from the cmdline, see OptsSettings
   attr_reader :settings
 
   # default arguments for when none are given, if wanted should be set by the
@@ -883,6 +883,8 @@ class QuteCmdObj
         when ArgNone;     param = nil
         when ArgRequired; @args[i+=1]
         when ArgOptional; @args[i+1] =~ %r(^[/-]) ? nil : @args[i+=1]
+          # XXX What is this else really catching?  It appears that ArgOptional is
+          # implemented above...
         else
           p optstr, optobj, argreq
           raise %Q(Optional parameters are not yet implemented)
