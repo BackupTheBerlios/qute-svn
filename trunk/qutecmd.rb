@@ -120,12 +120,12 @@ def QuteCmd::pkgoutput(cmdobj, pagerok = false)
   oldout = $stdout
 
   # Set up pager
-  if cmdobj.setting.has_key? 'mailto'
+  if cmdobj.settings.has_key? 'mailto'
     mailout = StringFile.new
     $stdout = mailout
-  elsif pagerok and not cmdobj.setting.has_key? 'nopage'
+  elsif pagerok and not cmdobj.settings.has_key? 'nopage'
     # Get the pager we want to use
-    pagercmd = (cmdobj.setting['pager'] or ENV['QUTEPAGER'] or
+    pagercmd = (cmdobj.settings['pager'] or ENV['QUTEPAGER'] or
       ENV['PAGER'] or 'more')
     begin
       # Use the pager as the default output
@@ -145,8 +145,8 @@ def QuteCmd::pkgoutput(cmdobj, pagerok = false)
   # If we're using mailout, send it where it belongs
   if mailout
     # Use template from file, or the inline default below
-    if cmdobj.setting['template']
-      msg = File.open(cmdobj.setting['template']) { |file| file.read }
+    if cmdobj.settings['template']
+      msg = File.open(cmdobj.settings['template']) { |file| file.read }
     else
       msg = <<ENDTMPL
 From: \#{user}
@@ -166,7 +166,7 @@ ENDTMPL
     # Collect the values available for the template, and apply them
     uservars = proc {
       user      = ENV['USER']
-      mailto    = cmdobj.setting['mailto']
+      mailto    = cmdobj.settings['mailto']
       date      = Date.today.to_s
       report    = mailout.to_s
       command   = cmdobj.to_s
@@ -175,8 +175,8 @@ ENDTMPL
     outstr = eval([ '%Q{', msg, '}' ].join, uservars)
 
     # Actually mail this if we have a mailto address
-    if cmdobj.setting['mailto']
-      sendmail = IO.popen("/usr/lib/sendmail #{cmdobj.setting['mailto']}", 'w')
+    if cmdobj.settings['mailto']
+      sendmail = IO.popen("/usr/lib/sendmail #{cmdobj.settings['mailto']}", 'w')
       sendmail.write(outstr)
       sendmail.close
     else
@@ -595,8 +595,8 @@ class SynopsisGrid
   # Decide if we're going to color or not.
   def usecolor
     return @usecolor if defined? @usecolor
-    if @cmdobj.setting.has_key? 'nocolor'   then @usecolor = false
-    elsif @cmdobj.setting.has_key? 'mailto' then @usecolor = false
+    if @cmdobj.settings.has_key? 'nocolor'   then @usecolor = false
+    elsif @cmdobj.settings.has_key? 'mailto' then @usecolor = false
     elsif not @colorok                      then @usecolor = false
     else                                         @usecolor = $stdout.tty?
     end
@@ -677,7 +677,7 @@ end
 class OptsSettings
   def validopts(cmdobj)
     # These are the settings options that will be available through
-    # cmdobj.setting
+    # cmdobj.settings
     return [
       [ 'nowrap',       ArgNone ],
       [ 'width',        ArgRequired ],
@@ -699,7 +699,7 @@ class OptsSettings
       else
         # All these other settings are properly associated with a specific
         # run of a command, so don't store them is a totally global place.
-        cmdobj.setting[opt] = arg
+        cmdobj.settings[opt] = arg
       end
     end
   end
@@ -782,14 +782,25 @@ end
 # instance of this class represents one "qute command" and encapsulates all
 # the state necessary for executing that command.
 class QuteCmdObj
-  attr_reader :command, :setting
-  attr_accessor :defaultargs, :syngrid
+  # usually the first argument, such as "read", "query", "update", etc.
+  attr_reader :command
+  
+  # hash of option/argument pairs from the cmdline
+  attr_reader :settings
+
+  # default arguments for when none are given, if wanted should be set by the
+  # instance before calling parseargs!
+  attr_accessor :defaultargs
+  
+  # synopsis grid associated with this command, if wanted should be set by the
+  # instance before calling parseargs!
+  attr_accessor :syngrid
 
   def initialize(cmdlist, argv = ARGV)
     @syngrid = nil
     @defaultargs = []
     @actualopts = []
-    @setting = {}
+    @settings = {}
     @optobjlist = []
     @command = 'read'  # default command
 
@@ -829,7 +840,7 @@ class QuteCmdObj
     @optobjlist << QuteCmd::OptsSettings.new
     if @syngrid
       # If we're going to use a SynopsisGrid, let the user customize it
-      @optobjlist << OptsSynopsis.new
+      @optobjlist << QuteCmd::OptsSynopsis.new
     end
 
     # Use defaultargs if none were given
