@@ -6,6 +6,7 @@
 
 require 'qute'
 require 'qutecmd'
+require 'pp'
 
 $ZERO = 'bugz'
 $QUTEDEBUG = true
@@ -48,6 +49,8 @@ class BugGrid < QuteCmd::SynopsisGrid
 end
 
 class BugList
+  include Enumerable
+
   def initialize( queryform )
     @bugtable = queryform.post( Qute::TableParser.new )
   end
@@ -76,17 +79,44 @@ class MultiParser
   end
 end
 
-class BugText
-  def initialize( queryform )
-    table = Qute::TableParser.new
-    form  = Qute::FormParser.new
-    @bugtext = queryform.post( MultiParser.new( table, form ) )
+class BugData < Hash
+  attr_accessor :sourceurl, :cookie
+end
 
-    p form.dataobj
-    p table.dataobj
+class BugDataList < Array
+  attr_reader :sourceurl, :cookie
+
+  def sourceurl=(url)
+    @sourceurl = url
+    self.each do |form|
+      form.sourceurl = url
+    end
   end
 
-  # XXX this definitely isn't complete
+  def cookie=(c)
+    @cookie = c
+    self.each do |form|
+      form.cookie = c
+    end
+  end
+end
+
+class BugDataParser < Qute::SGMLParser
+  include Qute::DataObjGen
+
+  def initialize
+    super
+    @bugdatalist = @dataobj = BugDataList.new
+    @bugdata = BugData.new
+  end
+
+  def hr_tag(token)   @bugdatalist.push(@bugdata); @bugdata = BugData.new; end
+
+  def start_td(token) startcapture; end
+  def end_td(token)
+    # check for colon-delimited data
+    @bugdata[$1] = $2 if endcapture =~ /(\S.*?)\s*:\s*(.*\S)\s*/
+  end
 end
 
 class BugzCommands
@@ -110,10 +140,24 @@ class BugzCommands
   end
 
   def read( cmdobj )
-    # XXX need a new grid probably
     cmdobj.parseargs!
-    bugtext = BugText.new( cmdobj.queryform )
-    # XXX need to finish BugText then can do something with it here
+    if cmdobj.queryform
+      buglist = BugList.new( cmdobj.queryform )
+      ids = buglist.map { |i| i['ID'].strip }
+    else
+      ids = cmdobj.ids
+    end
+    url = 'http://bugs.gentoo.org/long_list.cgi?buglist=' + ids.join(',')
+    bugs = Qute::Form.new( url ).post( BugDataParser.new )
+
+    QuteCmd.pkgoutput( cmdobj ) do
+      bugs.each do |bugdata|
+        longkey = 0
+        # really need something better than pp ;-)
+        pp bugdata
+      end
+      puts
+    end
   end
 
   def version( cmdobj )
@@ -121,16 +165,49 @@ class BugzCommands
   end
 end
 
+# Simple options class to use when avoiding query.cgi, only handles bug_id
+class OptsBugId
+  def validopts(cmdobj)
+    return [ 'bug_id', QuteCmd::ArgRequired ]
+  end
+
+  def applyopts(cmdobj)
+    cmdobj.each(self) do |opt, arg, flags|
+      case opt
+      when 'bug_id'
+        cmdobj.ids << arg
+      end
+    end
+  end
+end
+
+# BugzCmdObj subclasses QuteCmdObj to handle specifics of bugzilla
 class BugzCmdObj < QuteCmd::QuteCmdObj
+  # when query.cgi is required, holds the parsed form for use in OptsFormFields
   attr_reader :queryform
+
+  # when query.cgi is bypassed, contains the list of bug ids, appended to by
+  # OptsBugId#applyopts
+  attr_accessor :ids
+
+  def initialize(*args)
+    @ids = []
+    super(*args)
+  end
 
   def numberOptStr
     'bug_id'
   end
 
   def parseargs!
-    @queryform = getmainform
-    @optobjlist << QuteCmd::OptsFormFields.new( @queryform )
+    # If this general heuristic isn't good enough, fetching the query form could
+    # be moved to the individual methods of BugzCommands
+    if @args.detect { |a| a=~/\D/ }
+      @queryform = getmainform
+      @optobjlist << QuteCmd::OptsFormFields.new( @queryform )
+    else
+      @optobjlist << OptsBugId.new
+    end
     super
   end
 end
