@@ -499,8 +499,9 @@ class Form < OrderedHash
 #     puts resp.body
 #     puts "--------------------\nEnd Response\n--------------------\n"
 
-      if resp.header['location']
-        @targeturl = @targeturl.merge( resp.header['location'] )
+      location = resp.get_fields('location')
+      if location
+        @targeturl = @targeturl.merge( location[0] )
       else
         break
       end
@@ -1029,7 +1030,7 @@ def Qute::getnonambiguous(ptn, olist)
   cmplist = if ptn =~ /[A-Z]/
     cmplist = olist   # case sensitive
   else
-    cmplist = olist.map { |item| item.downcase }  # case insensitive
+    cmplist = olist.map { |item| item.to_s.downcase }  # case insensitive
   end
 
   # First stage -- exact match
