@@ -35,6 +35,8 @@ require 'cgi'
 require 'uri'
 require 'tempfile'
 
+$KCODE = 'u'    # instruct CGI to convert from HTML Unicode to internal UTF-8
+
 module Qute
 VERSIONMSG = "qute version #{%Q$Rev$.gsub(/(^.*: | $)/, '')}"
 
@@ -49,11 +51,31 @@ class SGMLParser
   OPTVALRE = %r{ (?:=\s*"([^"]*)" | =\s*'([^']*)' | =\s*([^\s>]*)) }x
   OPTSRE = %r{ (?:([^\s>=]+) #{OPTVALRE.source}? | #{OPTVALRE.source}) }x
 
+  # MatchData = [
+  #     0       complete match,
+  #     1       text
+  #     2       broken text
+  #     3       entity
+  #     4       comment
+  #     5       close tag
+  #     6       declaration tag
+  #     7       (open) tag
+  #         8   leading question mark
+  #         9   tag name
+  #        10   attribute name
+  #        11   attribute value (double-quoted)
+  #        12   attribute value (single-quoted)
+  #        13   attribute value (unquoted)
+  #        14   bogus attribute value (double-quoted)
+  #        15   bogus attribute value (single-quoted)
+  #        16   bogus attribute value (unquoted)
+  #        17   trailing question mark or slash
+  # ]
   SGMLRE = %r{
     (\A[^&<]+) |                                # text
    # this next line breaks ruby on Tru64:
     (\A<\W*[^<>=]*(?=<)) |                      # broken text
-    (\A&\#?\w*(?=\W);?) |                       # entity
+    (\A&\#?\w+;) |                              # entity
     (\A<!--(?:.|\s)*?-->) |                     # comment
     (\A</[-:\w]+>) |                            # close tag
     (\A<!\w+ (?:\s*(?:[^\s>]*|"[^"]*"))*\s*>) | # declaration tag
@@ -92,7 +114,7 @@ class SGMLParser
         elsif @matchdata[i+=1] then ['text', '']
         elsif @matchdata[i+=1] then ['entity', '']
         elsif @matchdata[i+=1] then ['comment', '']
-        elsif @matchdata[i+=1] then ['end',%r{\A</(.*)>\Z}.match(to_s)[1].downcase]
+        elsif @matchdata[i+=1] then ['end',%r{\A</(.*)>\Z}.match(self.to_s)[1].downcase]
         elsif @matchdata[i+=1] then ['other', '']
         elsif @matchdata[i+=1] then ['start', @matchdata[i+2].downcase]
         else raise "Parse failure:\n(%s)" % matchdata
@@ -103,16 +125,18 @@ class SGMLParser
       return @s if @s
 
       # if pre is false, collapse whitespace and unescape entities
-      @s = if pre then
-        @matchdata.to_s
+      if pre and @object != 'entity'
+        @s = @matchdata.to_s
       else
         # XXX: by not stripping this string, we could see multiple
         # spaces in a row, but I think this is better than the
         # possibility of completely eliminating spaces under other
         # circumstances.  Perhaps the collapsing should be done by
         # CaptureObj instead of the Token?
-        CGI.unescapeHTML(@matchdata.to_s.tr_s(" \t\n", ' '))
+        @s = CGI.unescapeHTML(@matchdata.to_s).gsub('&nbsp;', ' ')
+        @s.tr_s!(" \t\n", ' ')
       end
+
       @s
     end
 
@@ -162,6 +186,10 @@ class SGMLParser
     @capture = false
     tmp, @capobj = @capobj, CaptureObj.new
     return tmp
+  end
+
+  # default general token handler does nothing
+  def do_token(token)
   end
 
   # catch calls to start_foo, end_foo, and foo_tag methods that are made from
@@ -222,7 +250,7 @@ class SGMLParser
 
       if @capture
         case token.object
-        when 'text'
+        when 'text', 'entity'
           # text tokens are thrown away unless capture is true, in which
           # case we append the text to our capture buffer
           #XXX: add support for entities
@@ -977,6 +1005,8 @@ class TextParser < SGMLParser
       @text.gsub!(/setTimeout\(.*?\);/m, '')
 
       @text.gsub!(/(.{0,70})(\s|$)/, "\\1\n")  # wrap text at 70 chars
+    elsif token.object == 'entity' then
+      @text << token.to_s
     end
   end
 
