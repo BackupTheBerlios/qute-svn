@@ -79,8 +79,20 @@ class MultiParser
   end
 end
 
-class BugData < Hash
+class BugData
   attr_accessor :sourceurl, :cookie
+  attr_accessor :description, :comments
+  attr_accessor :data
+
+  def initialize
+    super
+    @comments = []
+    @data = {}
+  end
+
+  def method_missing(method, *args, &block)
+    @data.send(method, *args, &block)
+  end
 end
 
 class BugDataList < Array
@@ -101,6 +113,7 @@ class BugDataList < Array
   end
 end
 
+# Parser for the output of show_bug.cgi?format=multiple
 class BugDataParser < Qute::SGMLParser
   include Qute::DataObjGen
 
@@ -108,6 +121,7 @@ class BugDataParser < Qute::SGMLParser
     super
     @bugdatalist = @dataobj = BugDataList.new
     @bugdata = BugData.new
+    @comment = nil
   end
 
   def hr_tag(token)   @bugdatalist.push(@bugdata); @bugdata = BugData.new; end
@@ -116,6 +130,56 @@ class BugDataParser < Qute::SGMLParser
   def end_td(token)
     # check for colon-delimited data
     @bugdata[$1] = $2 if endcapture =~ /(\S.*?)\s*:\s*(.*\S)\s*/
+  end
+
+  def start_span(token)
+    if token['class'] == 'bz_comment'
+      @comment = BugComment.new
+      startcapture
+    end
+  end
+
+  def end_span(token)
+    return unless @comment      # class != bz_comment
+    return if @comment.author   # must be a span tag inside comment text
+    return unless endcapture =~ /
+      (\d+) \s+                 # bug number
+      From \s+ (.*?) \s+        # author
+      (\d\d\d\d-\d{1,2}-\d{1,2} # date, time, timezone
+      \s+ \d{1,2}:\d\d\s+\S+)
+      /x
+    @comment.num, @comment.author, @comment.date = $1, $2, $3
+  end
+
+  def a_tag(token)
+    return unless @comment              # not capturing a comment
+    return if @comment.author_email     # already have the email
+    return unless token['href'] =~ /^mailto:(.+)/
+    @comment.author_email = $1
+  end
+
+  def start_pre(token)
+    startcapture(true)
+  end
+
+  def end_pre(token)
+    if @comment
+      @comment.text = endcapture
+      @bugdata.comments << @comment
+      @comment = nil
+    else
+      desc = endcapture
+      @bugdata.description ||= desc
+    end
+  end
+end
+
+class BugComment
+  attr_accessor :num, :author, :author_email, :date, :text
+
+  def to_s
+    "------- Comment %s From %s %s -------\n\n%s" % 
+    [ @num, @author, @date, @text ]
   end
 end
 
@@ -147,14 +211,31 @@ class BugzCommands
     else
       ids = cmdobj.ids
     end
-    url = 'http://bugs.gentoo.org/long_list.cgi?buglist=' + ids.join(',')
+    url = 'http://bugs.gentoo.org/show_bug.cgi?format=multiple&id=' + ids.join('&id=')
     bugs = Qute::Form.new( url ).post( BugDataParser.new )
 
     QuteCmd.pkgoutput( cmdobj ) do
+      first = true
       bugs.each do |bugdata|
-        longkey = 0
-        # really need something better than pp ;-)
-        pp bugdata
+        if not first
+          puts
+          puts "========================================================"
+          puts
+        else
+          first = false
+        end
+        bugdata.each do |k,v|
+          puts "%14s : %s" % [ k, v ]
+        end
+        puts
+        puts "------- Description -------"
+        puts
+        puts bugdata.description
+        puts
+        bugdata.comments.each do |bc|
+          puts bc
+          puts
+        end
       end
       puts
     end
