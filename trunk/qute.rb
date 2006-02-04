@@ -56,7 +56,7 @@ class SGMLParser
   #     1       text
   #     2       broken text
   #     3       entity
-  #     4       comment
+  #     4       start comment
   #     5       close tag
   #     6       declaration tag
   #     7       (open) tag
@@ -73,10 +73,9 @@ class SGMLParser
   # ]
   SGMLRE = %r{
     (\A[^&<]+) |                                # text
-   # this next line breaks ruby on Tru64:
-    (\A<\W*[^<>=]*(?=<)) |                      # broken text
+    (\A<!--) |                                  # start comment
+    (\A<(?=\W*[^<>=]*<)) |                      # broken text, only snip the leading <
     (\A&\#?\w+;) |                              # entity
-    (\A<!--(?:.|\s)*?-->) |                     # comment
     (\A</[-:\w]+>) |                            # close tag
     (\A<!\w+ (?:\s*(?:[^\s>]*|"[^"]*"))*\s*>) | # declaration tag
     (\A                                         # open tag
@@ -85,7 +84,7 @@ class SGMLParser
       (?:\s+ #{OPTSRE.source} )*
       \s* ([?/]?) \s*>
     )
-  }x
+  }xm
 
   # This object is a string, but also can contain a list of link urls
   class CaptureObj < String
@@ -97,8 +96,8 @@ class SGMLParser
   end
 
   # This object provides an interface to a single token's-worth of SGML-stream
-  # text.  A token is a start or end tag, an SGML comment, a piece of plain
-  # text, or an entity.
+  # text.  A token is a start or end tag, the start of an SGML comment, a piece
+  # of plain text, or an entity.
   class Token
     attr_reader :object, :tag
 
@@ -111,9 +110,9 @@ class SGMLParser
       # calculate object and tag
       i = 0
       @object, @tag = if @matchdata[i+=1] then ['text', '']
+        elsif @matchdata[i+=1] then ['comment', '']
         elsif @matchdata[i+=1] then ['text', '']
         elsif @matchdata[i+=1] then ['entity', '']
-        elsif @matchdata[i+=1] then ['comment', '']
         elsif @matchdata[i+=1] then ['end',%r{\A</(.*)>\Z}.match(self.to_s)[1].downcase]
         elsif @matchdata[i+=1] then ['other', '']
         elsif @matchdata[i+=1] then ['start', @matchdata[i+2].downcase]
@@ -181,7 +180,7 @@ class SGMLParser
     @capobj = CaptureObj.new
   end
 
-  # stop capturing text and return the current contents of our capture buffer
+  # stop capturing text and return the current content of our capture buffer
   def endcapture
     @capture = false
     tmp, @capobj = @capobj, CaptureObj.new
@@ -220,18 +219,30 @@ class SGMLParser
       # process xmp tags specially
       if token.object == 'start' and token.tag == 'xmp' then
         texttoken = nil
-        @parsebuf.sub! %r{^(.*?)</xmp>}mi do
+        @parsebuf.sub! %r{\A(.*?)</xmp>}mi do
           texttoken = TextToken.new($1)
           ''
         end
         if not texttoken then
           # since we failed to find matching open and close xmp tags, push the
-          # xmp-open tag back on the front of the parse buffer and go around
-          # again.  XXX: this should be handled more cleanly
+          # xmp-open tag back on the front of the parse buffer and wait to be
+          # called back with more content in the parse buffer.
           @parsebuf = token.to_s + @parsebuf
           break
         end
         token = texttoken
+      end
+
+      # process comments specially
+      if token.object == 'comment'
+        # if we can find the end of the comment, then snip out this aborrent
+        # text and loop
+        next if @parsebuf.sub! %r{\A.*?-->}m, ''
+        # couldn't find the end of the comment, push the comment start back on
+        # the front of the parse buffer and wait to be called back with more
+        # content.
+        @parsebuf = token.to_s + @parsebuf
+        break
       end
 
       # call general token handler, if it's defined
@@ -539,7 +550,7 @@ class Form < OrderedHash
     # return value depends on if a parser was passed in
     if parser then
       # set the data object generator's cookie
-      parser.cookie = $1 if resp['set-cookie'] =~ /^([^;]*)/
+      parser.cookie = $1 if resp['set-cookie'] =~ /\A([^;]*)/
 
       # return the data object created by the parser instance
       parser.verify
@@ -691,7 +702,7 @@ class TableRecord
     if recordcol then
       # if two parameters were passed in, us them as the recordrow and recordcol
       rowoffset = @headers[0].rownum + pattern
-    elsif pattern.is_a? String and pattern =~ /^(\d*),(\d*)$/ then
+    elsif pattern.is_a? String and pattern =~ /\A(\d*),(\d*)$/ then
       # two parameters passed as a string
       rowoffset = @headers[0].rownum + $1.to_i
       recordcol = $2.to_i
