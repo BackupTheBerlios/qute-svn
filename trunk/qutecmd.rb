@@ -63,23 +63,35 @@ def QuteCmd::gettermsize
         $TIOCGWINSZ = 0x40000000 | ((8 & 0x1fff) << 16) | (116 << 8) | 104
       when /^Linux alpha/
         $TIOCGWINSZ = 0x40087468
-      when /^Linux/ # hopefully x86
+      when /^Linux (?:i.|x)86/  # x86 or x86_64
         $TIOCGWINSZ = 0x5413
       else
         $TIOCGWINSZ = nil # don't know this OS
     end
 
     # Allocate space for the return data prior to calling ioctl.
-    str = [ 0, 0, 0, 0 ].pack('S4')
-    if $TIOCGWINSZ && $stdout.ioctl($TIOCGWINSZ, str) >= 0 then
-      rows, cols, xpixels, ypixels = str.unpack('S4')
-      #debug "Calculated terminal size: #{rows}, #{cols}"
+    if $TIOCGWINSZ 
+      str = [ 0, 0, 0, 0 ].pack('S4')
+      if $stdout.ioctl($TIOCGWINSZ, str) >= 0 then
+        rows, cols, xpixels, ypixels = str.unpack('S4')
+        #debug "Calculated terminal size: #{rows}, #{cols}"
+      end
+    else
+      str = `stty size`
+      if $? == 0 and str =~ /(\d+) (\d+)/
+        rows, cols = $1.to_i, $2.to_i
+      end
     end
   end
 
   # Use defaults if needed
   $termsize = [ (rows or 24), (cols or 79) ]
   return $termsize
+end
+
+def QuteCmd::hr(s = '-', label = nil)
+  label = label ? " #{label} " : ''
+  label.center(QuteCmd::gettermsize[1]-1, s)
 end
 
 # Mixin to String to wrap text that looks wrappable
@@ -232,6 +244,8 @@ class NonAmbiguousHash < Hash
     super(realkey)
   end
 end
+
+require 'qute'  # otherwise we can't add to the Qute:: namespace
 
 def Qute::getline(prompt)
   if defined? Readline
