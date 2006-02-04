@@ -113,8 +113,9 @@ class BugDataList < Array
   end
 end
 
-# Parser for the output of show_bug.cgi?format=multiple
-class BugDataParser < Qute::SGMLParser
+# Abstract parser for the output of show_bug.cgi or show_bug.cgi?format=multiple
+# (aka long_list.cgi), subclassed by BugDataParser and BugDataParserMulti
+class BugDataParserA < Qute::SGMLParser
   include Qute::DataObjGen
 
   def initialize
@@ -124,13 +125,7 @@ class BugDataParser < Qute::SGMLParser
     @comment = nil
   end
 
-  def hr_tag(token)   @bugdatalist.push(@bugdata); @bugdata = BugData.new; end
-
-  def start_td(token) startcapture; end
-  def end_td(token)
-    # check for colon-delimited data
-    @bugdata[$1] = $2 if endcapture =~ /(\S.*?)\s*:\s*(.*\S)\s*/
-  end
+  def end_html(token) @bugdatalist.push(@bugdata); end
 
   def start_span(token)
     if token['class'] == 'bz_comment'
@@ -174,6 +169,74 @@ class BugDataParser < Qute::SGMLParser
   end
 end
 
+# Parser for the output of show_bug.cgi?format=multiple (aka long_list.cgi)
+class BugDataParserMulti < BugDataParserA
+  def hr_tag(token)   @bugdatalist.push(@bugdata); @bugdata = BugData.new; end
+
+  def start_td(token) startcapture; end
+  def end_td(token)
+    # check for colon-delimited data
+    @bugdata[$1] = $2 if endcapture =~ /(\S.*?)\s*:\s*(.*\S)\s*/
+  end
+end
+
+# Parser for the output of show_bug.cgi?format=multiple (aka long_list.cgi)
+class BugDataParser < BugDataParserA
+  
+  class SelectList < Array
+    attr_reader :multi
+    def initialize(multi) 
+      @multi = !!multi
+      super()
+    end
+    def to_s
+      self.join(', ')
+    end
+  end
+
+  def initialize
+    @label = nil
+    @select = nil
+    super
+  end
+
+  def start_td(token) startcapture; end
+  def end_td(token)
+    if @label
+      s = endcapture.strip
+      # handle some labels specially
+      case @label
+      when 'Bug#'
+        s.sub!(/\s.*/, '')
+      end
+      @bugdata[@label] = s
+      @label = nil
+    else
+      @label = $1 if endcapture =~ /(\S.*?):/
+    end
+  end
+
+  def start_select(token)
+    return unless @label
+    @select = SelectList.new(token['multiple'])
+    endcapture  # don't start until <option> tag
+  end
+  def start_option(token)
+    return unless @select
+    startcapture if @select.multi or token['selected']
+  end
+  def end_option(token)
+    return unless @select and @capture
+    @select << endcapture.strip
+  end
+  def end_select(token)
+    return unless @select
+    @bugdata[@label] = @select.multi ? @select : @select[0]
+    @select = nil
+    @label = nil
+  end
+end
+
 class BugComment
   attr_accessor :num, :author, :author_email, :date, :text
 
@@ -205,29 +268,40 @@ class BugzCommands
 
   def read( cmdobj )
     cmdobj.parseargs!
+
+    # We can get our ids from query results or direct from the cmdline
     if cmdobj.queryform
       buglist = BugList.new( cmdobj.queryform )
       ids = buglist.map { |i| i['ID'].strip }
     else
       ids = cmdobj.ids
     end
-    url = 'http://bugs.gentoo.org/show_bug.cgi?format=multiple&id=' + ids.join('&id=')
-    bugs = Qute::Form.new( url ).post( BugDataParser.new )
 
-    QuteCmd.pkgoutput( cmdobj ) do
+    # show_bug.cgi without format=multiple requires multiple calls to get all
+    # the bug data, but format=multiple unfortunately doesn't provide all the
+    # data :-(
+    bugs = []
+    ids.each do |id|
+      url = 'http://bugs.gentoo.org/show_bug.cgi?id=' + id
+      bugs += Qute::Form.new( url ).post( BugDataParser.new )
+    end
+
+    QuteCmd.pkgoutput( cmdobj, true ) do
       first = true
       bugs.each do |bugdata|
-        if not first
-          puts
-          puts "========================================================"
-          puts
-        else
-          first = false
-        end
-        bugdata.each do |k,v|
-          puts "%14s : %s" % [ k, v ]
-        end
-        puts
+        puts '', QuteCmd::hr('='), '' unless first
+        first = false
+#       puts "%14s : %s" % [ "Bug# #{bugdata['Bug#']}", bugdata['Summary'] ], ''
+#       column1 = %w( Assigned\ To Reporter Status Resolution Status\ Whiteboard Keywords URL )
+#       column2 = %w( Product Component Hardware OS Version Priority Severity )
+#       column3 = %w( CC )
+#       column1.each_index do |x|
+#         # XXX
+#         puts "%14s : %s" % [ k, bugdata[k] ]
+#         end
+#         puts
+#       end
+        pp bugdata
         puts "------- Description -------"
         puts
         puts bugdata.description
@@ -273,7 +347,7 @@ class BugzCmdObj < QuteCmd::QuteCmdObj
 
   def initialize(*args)
     @ids = []
-    super(*args)
+    super
   end
 
   def numberOptStr
